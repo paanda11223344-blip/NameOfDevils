@@ -2731,7 +2731,534 @@ function tttRestart() {
 
     tttDraw();
 }
+<!-- BOMB SHELTER -->
 
+<div class="bomb-game">
+
+    <h2>💣 BOMB SHELTER</h2>
+
+    <div class="bomb-description">
+        Choose a place to hide before the bomb hits.
+    </div>
+
+    <div id="bombStatus">
+        Choose your hiding spot.
+    </div>
+
+    <div class="bomb-info">
+        <span>❤️ Your chance: <b id="yourChance">-</b></span>
+        <span>🤖 Bot chance: <b id="botChance">-</b></span>
+    </div>
+
+    <div id="bombBoard"></div>
+
+    <button
+        id="bombStart"
+        onclick="startBombGame()">
+        💣 START ROUND
+    </button>
+
+</div>
+
+
+<style>
+
+.bomb-game {
+    width: 94%;
+    max-width: 500px;
+
+    margin: 40px auto;
+    padding: 20px;
+
+    background: #151515;
+    color: white;
+
+    border: 2px solid #333;
+    border-radius: 20px;
+
+    text-align: center;
+}
+
+.bomb-game h2 {
+    margin-top: 0;
+}
+
+.bomb-description {
+    color: #aaa;
+    margin-bottom: 15px;
+}
+
+#bombStatus {
+    min-height: 25px;
+    margin: 12px 0;
+
+    font-weight: bold;
+}
+
+.bomb-info {
+    display: flex;
+    justify-content: space-around;
+
+    margin-bottom: 15px;
+
+    font-size: 14px;
+}
+
+#bombBoard {
+
+    width: min(90vw, 405px);
+    aspect-ratio: 1;
+
+    margin: auto;
+
+    display: grid;
+
+    grid-template-columns: repeat(9, 1fr);
+    grid-template-rows: repeat(9, 1fr);
+
+    gap: 3px;
+
+    background: #080808;
+
+    padding: 4px;
+
+    border-radius: 10px;
+}
+
+.bomb-cell {
+
+    border: 1px solid #444;
+    border-radius: 5px;
+
+    background: #292929;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: clamp(14px, 6vw, 30px);
+
+    cursor: pointer;
+
+    transition: .12s;
+}
+
+.bomb-cell:hover {
+    background: #3b3b3b;
+}
+
+.bomb-cell:active {
+    transform: scale(.92);
+}
+
+.bomb-cell.player-choice {
+    background: #293f63;
+}
+
+.bomb-cell.bot-choice {
+    background: #315b38;
+}
+
+.bomb-cell.bomb-location {
+    background: #5b1717;
+}
+
+.bomb-cell.revealed {
+    cursor: default;
+}
+
+#bombStart {
+
+    margin-top: 18px;
+
+    padding: 12px 22px;
+
+    border: none;
+    border-radius: 10px;
+
+    background: #333;
+    color: white;
+
+    font-size: 17px;
+    font-weight: bold;
+
+    cursor: pointer;
+}
+
+#bombStart:hover {
+    background: #444;
+}
+
+</style>
+
+
+<script>
+
+const BOMB_SIZE = 9;
+
+let bombActive = false;
+
+let playerBombPosition = null;
+let botBombPosition = null;
+let bombPosition = null;
+
+
+/*
+    START ROUND
+*/
+
+function startBombGame() {
+
+    bombActive = true;
+
+    document.getElementById("bombStatus")
+        .textContent =
+        "Choose your hiding spot 👆";
+
+    document.getElementById("yourChance")
+        .textContent = "-";
+
+    document.getElementById("botChance")
+        .textContent = "-";
+
+    /*
+        LOSOWANIE BOMBY
+    */
+
+    bombPosition = {
+        x: Math.floor(Math.random() * BOMB_SIZE),
+        y: Math.floor(Math.random() * BOMB_SIZE)
+    };
+
+
+    /*
+        BOT LOSUJE SWOJE MIEJSCE
+    */
+
+    botBombPosition = {
+        x: Math.floor(Math.random() * BOMB_SIZE),
+        y: Math.floor(Math.random() * BOMB_SIZE)
+    };
+
+
+    playerBombPosition = null;
+
+    drawBombBoard();
+}
+
+
+/*
+    RYSOWANIE PLANSZY
+*/
+
+function drawBombBoard(reveal = false) {
+
+    const board =
+        document.getElementById("bombBoard");
+
+    board.innerHTML = "";
+
+
+    for (let y = 0; y < BOMB_SIZE; y++) {
+
+        for (let x = 0; x < BOMB_SIZE; x++) {
+
+            const cell =
+                document.createElement("div");
+
+            cell.className = "bomb-cell";
+
+
+            /*
+                PO RUNDZIE POKAŻ BOMBE
+            */
+
+            if (
+                reveal &&
+                x === bombPosition.x &&
+                y === bombPosition.y
+            ) {
+
+                cell.textContent = "💣";
+                cell.classList.add("bomb-location");
+            }
+
+
+            /*
+                WYBÓR GRACZA
+            */
+
+            if (
+                playerBombPosition &&
+                x === playerBombPosition.x &&
+                y === playerBombPosition.y
+            ) {
+
+                if (reveal) {
+                    cell.textContent = "👤";
+                }
+
+                cell.classList.add("player-choice");
+            }
+
+
+            /*
+                WYBÓR BOTA
+            */
+
+            if (
+                reveal &&
+                x === botBombPosition.x &&
+                y === botBombPosition.y
+            ) {
+
+                if (
+                    x === bombPosition.x &&
+                    y === bombPosition.y
+                ) {
+                    cell.textContent = "🤖💥";
+                } else {
+                    cell.textContent = "🤖";
+                }
+
+                cell.classList.add("bot-choice");
+            }
+
+
+            /*
+                KLIKNIĘCIE
+            */
+
+            if (bombActive) {
+
+                cell.onclick = () => {
+
+                    chooseBombSpot(x, y);
+
+                };
+
+            }
+
+
+            board.appendChild(cell);
+        }
+    }
+}
+
+
+/*
+    WYBÓR MIEJSCA
+*/
+
+function chooseBombSpot(x, y) {
+
+    if (!bombActive)
+        return;
+
+
+    playerBombPosition = {
+        x: x,
+        y: y
+    };
+
+
+    /*
+        OBLICZANIE ODLEGŁOŚCI OD BOMBY
+    */
+
+    const distance =
+        Math.sqrt(
+            Math.pow(
+                x - bombPosition.x,
+                2
+            ) +
+            Math.pow(
+                y - bombPosition.y,
+                2
+            )
+        );
+
+
+    /*
+        MAKSYMALNA ODLEGŁOŚĆ
+        NA PLANSZY 9x9
+    */
+
+    const maxDistance =
+        Math.sqrt(
+            8 * 8 +
+            8 * 8
+        );
+
+
+    /*
+        SZANSA:
+
+        blisko = mniejsza
+        daleko = większa
+
+        Minimum 5%
+        Maximum 95%
+    */
+
+    let chance =
+        5 +
+        (distance / maxDistance) * 90;
+
+
+    chance =
+        Math.round(chance);
+
+
+    /*
+        BOT CHANCE
+    */
+
+    const botDistance =
+        Math.sqrt(
+            Math.pow(
+                botBombPosition.x - bombPosition.x,
+                2
+            ) +
+            Math.pow(
+                botBombPosition.y - bombPosition.y,
+                2
+            )
+        );
+
+
+    let botChanceValue =
+        5 +
+        (botDistance / maxDistance) * 90;
+
+
+    botChanceValue =
+        Math.round(botChanceValue);
+
+
+    document.getElementById("yourChance")
+        .textContent =
+        chance + "%";
+
+
+    document.getElementById("botChance")
+        .textContent =
+        botChanceValue + "%";
+
+
+    document.getElementById("bombStatus")
+        .textContent =
+        "Hiding... 💣";
+
+
+    bombActive = false;
+
+
+    /*
+        CHWILA NAPIĘCIA 😹
+    */
+
+    setTimeout(() => {
+
+        finishBombGame(
+            chance,
+            botChanceValue
+        );
+
+    }, 1200);
+}
+
+
+/*
+    KONIEC RUNDY
+*/
+
+function finishBombGame(
+    playerChance,
+    botChanceValue
+) {
+
+
+    /*
+        LOSOWANIE WYNIKU
+    */
+
+    const playerRoll =
+        Math.random() * 100;
+
+    const botRoll =
+        Math.random() * 100;
+
+
+    const playerSurvived =
+        playerRoll <= playerChance;
+
+
+    const botSurvived =
+        botRoll <= botChanceValue;
+
+
+    /*
+        STATUS
+    */
+
+    let resultText = "";
+
+
+    if (playerSurvived) {
+
+        resultText +=
+            "❤️ YOU SURVIVED!";
+
+    } else {
+
+        resultText +=
+            "💀 YOU LOST!";
+
+    }
+
+
+    if (botSurvived) {
+
+        resultText +=
+            " &nbsp; 🤖 BOT SURVIVED.";
+
+    } else {
+
+        resultText +=
+            " &nbsp; 🤖 BOT LOST.";
+
+    }
+
+
+    document.getElementById("bombStatus")
+        .innerHTML = resultText;
+
+
+    /*
+        POKAŻ WSZYSTKO
+    */
+
+    drawBombBoard(true);
+
+
+    /*
+        ZMIEŃ PRZYCISK
+    */
+
+    document.getElementById("bombStart")
+        .textContent =
+        "🔄 NEW ROUND";
+}
+
+
+/*
+    START
+*/
+
+drawBombBoard();
+
+</script>
 
 /*
     START
