@@ -3267,3 +3267,582 @@ drawBombBoard();
 tttDraw();
 
 </script>
+<!-- 2048 -->
+
+<div class="game2048">
+
+    <h2>🔢 2048</h2>
+
+    <div class="score2048">
+        Score: <span id="score2048">0</span>
+    </div>
+
+    <div id="board2048"></div>
+
+    <div class="controls2048">
+        <button onclick="move2048('up')">⬆️</button>
+
+        <div>
+            <button onclick="move2048('left')">⬅️</button>
+            <button onclick="move2048('down')">⬇️</button>
+            <button onclick="move2048('right')">➡️</button>
+        </div>
+    </div>
+
+    <div id="status2048"></div>
+
+    <button class="restart2048" onclick="start2048()">
+        🔄 NEW GAME
+    </button>
+
+</div>
+
+
+<style>
+
+.game2048 {
+    width: 94%;
+    max-width: 430px;
+
+    margin: 40px auto;
+    padding: 20px;
+
+    background: #151515;
+    color: white;
+
+    border: 2px solid #333;
+    border-radius: 20px;
+
+    text-align: center;
+}
+
+.game2048 h2 {
+    margin-top: 0;
+}
+
+.score2048 {
+    margin-bottom: 15px;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+#board2048 {
+    width: min(90vw, 360px);
+    aspect-ratio: 1;
+
+    margin: auto;
+
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: repeat(4, 1fr);
+
+    gap: 7px;
+
+    padding: 7px;
+
+    background: #222;
+    border-radius: 12px;
+}
+
+.tile2048 {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 8px;
+
+    font-size: clamp(20px, 8vw, 38px);
+    font-weight: 900;
+
+    color: white;
+
+    transition: .1s;
+}
+
+.tile2 { background: #d32f2f; }
+.tile4 { background: #f57c00; }
+.tile8 { background: #fbc02d; }
+.tile16 { background: #388e3c; }
+.tile32 { background: #1976d2; }
+.tile64 { background: #7b1fa2; }
+
+.tile128 {
+    background: #c2185b;
+}
+
+.tile256 {
+    background: #00838f;
+}
+
+.tile512 {
+    background: #5d4037;
+}
+
+.tile1024 {
+    background: #455a64;
+}
+
+.tile2048 {
+    background: #111;
+    border: 3px solid white;
+}
+
+.controls2048 {
+    margin-top: 15px;
+}
+
+.controls2048 button,
+.restart2048 {
+
+    border: none;
+    border-radius: 10px;
+
+    background: #333;
+    color: white;
+
+    cursor: pointer;
+
+    font-size: 20px;
+    font-weight: bold;
+
+    margin: 3px;
+
+    min-width: 55px;
+    min-height: 45px;
+}
+
+.controls2048 button:active,
+.restart2048:active {
+    transform: scale(.92);
+}
+
+.restart2048 {
+    margin-top: 12px;
+    padding: 10px 20px;
+
+    font-size: 15px;
+}
+
+#status2048 {
+    min-height: 25px;
+    margin-top: 12px;
+    font-weight: bold;
+}
+
+</style>
+
+
+<script>
+
+let board2048 = [];
+let score2048 = 0;
+
+
+/*
+    START GRY
+*/
+
+function start2048() {
+
+    board2048 = [
+        [0,0,0,0],
+        [0,0,0,0],
+        [0,0,0,0],
+        [0,0,0,0]
+    ];
+
+    score2048 = 0;
+
+    document.getElementById("score2048")
+        .textContent = "0";
+
+    document.getElementById("status2048")
+        .textContent = "";
+
+    addTile2048();
+    addTile2048();
+
+    draw2048();
+}
+
+
+/*
+    DODAWANIE KAFELKA
+*/
+
+function addTile2048() {
+
+    let empty = [];
+
+    for (let y = 0; y < 4; y++) {
+
+        for (let x = 0; x < 4; x++) {
+
+            if (board2048[y][x] === 0) {
+
+                empty.push({
+                    x: x,
+                    y: y
+                });
+            }
+        }
+    }
+
+    if (empty.length === 0)
+        return;
+
+
+    const spot =
+        empty[
+            Math.floor(
+                Math.random() * empty.length
+            )
+        ];
+
+
+    board2048[spot.y][spot.x] =
+        Math.random() < 0.9 ? 2 : 4;
+}
+
+
+/*
+    RYSOWANIE
+*/
+
+function draw2048() {
+
+    const board =
+        document.getElementById("board2048");
+
+    board.innerHTML = "";
+
+
+    for (let y = 0; y < 4; y++) {
+
+        for (let x = 0; x < 4; x++) {
+
+            const tile =
+                document.createElement("div");
+
+            const value =
+                board2048[y][x];
+
+
+            tile.className = "tile2048";
+
+
+            if (value !== 0) {
+
+                tile.textContent = value;
+
+                tile.classList.add(
+                    "tile" + value
+                );
+            }
+
+
+            board.appendChild(tile);
+        }
+    }
+}
+
+
+/*
+    RUCH
+*/
+
+function move2048(direction) {
+
+    const oldBoard =
+        JSON.stringify(board2048);
+
+
+    if (direction === "left") {
+
+        for (let y = 0; y < 4; y++) {
+
+            board2048[y] =
+                combine2048(
+                    board2048[y]
+                );
+        }
+    }
+
+
+    if (direction === "right") {
+
+        for (let y = 0; y < 4; y++) {
+
+            board2048[y] =
+                combine2048(
+                    board2048[y].slice().reverse()
+                ).reverse();
+        }
+    }
+
+
+    if (direction === "up") {
+
+        for (let x = 0; x < 4; x++) {
+
+            let column = [];
+
+            for (let y = 0; y < 4; y++) {
+
+                column.push(
+                    board2048[y][x]
+                );
+            }
+
+            column =
+                combine2048(column);
+
+
+            for (let y = 0; y < 4; y++) {
+
+                board2048[y][x] =
+                    column[y];
+            }
+        }
+    }
+
+
+    if (direction === "down") {
+
+        for (let x = 0; x < 4; x++) {
+
+            let column = [];
+
+            for (let y = 0; y < 4; y++) {
+
+                column.push(
+                    board2048[y][x]
+                );
+            }
+
+            column =
+                combine2048(
+                    column.reverse()
+                ).reverse();
+
+
+            for (let y = 0; y < 4; y++) {
+
+                board2048[y][x] =
+                    column[y];
+            }
+        }
+    }
+
+
+    /*
+        SPRAWDŹ CZY RUCH COŚ ZMIENIŁ
+    */
+
+    if (
+        JSON.stringify(board2048) !== oldBoard
+    ) {
+
+        addTile2048();
+
+        draw2048();
+
+
+        if (has2048()) {
+
+            document.getElementById(
+                "status2048"
+            ).textContent =
+                "🏆 YOU REACHED 2048!";
+
+            return;
+        }
+
+
+        if (!canMove2048()) {
+
+            document.getElementById(
+                "status2048"
+            ).textContent =
+                "💀 GAME OVER";
+
+            return;
+        }
+    }
+}
+
+
+/*
+    ŁĄCZENIE KAFELKÓW
+*/
+
+function combine2048(row) {
+
+    let numbers =
+        row.filter(
+            value => value !== 0
+        );
+
+
+    for (let i = 0; i < numbers.length - 1; i++) {
+
+        if (
+            numbers[i] === numbers[i + 1]
+        ) {
+
+            numbers[i] *= 2;
+
+            score2048 += numbers[i];
+
+            numbers.splice(
+                i + 1,
+                1
+            );
+        }
+    }
+
+
+    while (numbers.length < 4) {
+
+        numbers.push(0);
+    }
+
+
+    document.getElementById(
+        "score2048"
+    ).textContent =
+        score2048;
+
+
+    return numbers;
+}
+
+
+/*
+    CZY JEST 2048
+*/
+
+function has2048() {
+
+    for (let y = 0; y < 4; y++) {
+
+        for (let x = 0; x < 4; x++) {
+
+            if (
+                board2048[y][x] >= 2048
+            ) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+
+/*
+    CZY MOŻNA JESZCZE RUSZYĆ
+*/
+
+function canMove2048() {
+
+    /*
+        Wolne pole
+    */
+
+    for (let y = 0; y < 4; y++) {
+
+        for (let x = 0; x < 4; x++) {
+
+            if (
+                board2048[y][x] === 0
+            ) {
+                return true;
+            }
+        }
+    }
+
+
+    /*
+        Możliwe połączenie poziome
+    */
+
+    for (let y = 0; y < 4; y++) {
+
+        for (let x = 0; x < 3; x++) {
+
+            if (
+                board2048[y][x] ===
+                board2048[y][x + 1]
+            ) {
+                return true;
+            }
+        }
+    }
+
+
+    /*
+        Możliwe połączenie pionowe
+    */
+
+    for (let y = 0; y < 3; y++) {
+
+        for (let x = 0; x < 4; x++) {
+
+            if (
+                board2048[y][x] ===
+                board2048[y + 1][x]
+            ) {
+                return true;
+            }
+        }
+    }
+
+
+    return false;
+}
+
+
+/*
+    KLAWIATURA
+*/
+
+document.addEventListener(
+    "keydown",
+    function(event) {
+
+        if (
+            event.key === "ArrowLeft"
+        ) {
+            move2048("left");
+        }
+
+        if (
+            event.key === "ArrowRight"
+        ) {
+            move2048("right");
+        }
+
+        if (
+            event.key === "ArrowUp"
+        ) {
+            move2048("up");
+        }
+
+        if (
+            event.key === "ArrowDown"
+        ) {
+            move2048("down");
+        }
+
+    }
+);
+
+
+/*
+    START
+*/
+
+start2048();
+
+                    </script>
