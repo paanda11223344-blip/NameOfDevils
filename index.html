@@ -583,4 +583,310 @@ spinButton.addEventListener(
 </script>
 
 </body>
-  </html>
+  </html> 
+<!-- SNAKE -->
+<div class="snake-game">
+
+    <h2>🐍 SNAKE</h2>
+    <div id="snakeScore">Wynik: 0</div>
+
+    <canvas id="snakeCanvas" width="400" height="400"></canvas>
+
+    <div id="snakeMessage"></div>
+
+    <div class="snake-controls">
+        <button onclick="snakeDirection(0, -1)">⬆️</button>
+
+        <div>
+            <button onclick="snakeDirection(-1, 0)">⬅️</button>
+            <button onclick="snakeDirection(0, 1)">⬇️</button>
+            <button onclick="snakeDirection(1, 0)">➡️</button>
+        </div>
+    </div>
+
+    <button onclick="snakeRestart()" class="snake-restart">
+        🔄 RESTART
+    </button>
+
+</div>
+
+
+<style>
+
+.snake-game {
+    margin: 35px auto;
+    text-align: center;
+}
+
+.snake-game h2 {
+    margin-bottom: 5px;
+}
+
+#snakeScore {
+    margin-bottom: 12px;
+    font-size: 18px;
+}
+
+#snakeCanvas {
+    width: min(90vw, 400px);
+    height: min(90vw, 400px);
+    background: #151515;
+    border: 3px solid #444;
+    border-radius: 12px;
+    display: block;
+    margin: auto;
+}
+
+#snakeMessage {
+    height: 28px;
+    margin-top: 10px;
+    font-weight: bold;
+}
+
+.snake-controls {
+    margin-top: 15px;
+}
+
+.snake-controls button,
+.snake-restart {
+    border: none;
+    background: #292929;
+    color: white;
+    border-radius: 10px;
+    cursor: pointer;
+    touch-action: manipulation;
+}
+
+.snake-controls button {
+    width: 65px;
+    height: 55px;
+    margin: 3px;
+    font-size: 25px;
+}
+
+.snake-controls button:active {
+    transform: scale(.92);
+    background: #444;
+}
+
+.snake-restart {
+    margin-top: 12px;
+    padding: 10px 20px;
+    font-size: 16px;
+}
+
+</style>
+
+
+<script>
+
+const snakeCanvas = document.getElementById("snakeCanvas");
+const snakeCtx = snakeCanvas.getContext("2d");
+
+const snakeGrid = 20;
+const snakeTile = snakeCanvas.width / snakeGrid;
+
+let snakeBody;
+let snakeApple;
+let snakeDir;
+let snakeNextDir;
+let snakePoints;
+let snakeDead;
+
+function snakeStart() {
+
+    snakeBody = [
+        {x: 10, y: 10},
+        {x: 9, y: 10},
+        {x: 8, y: 10}
+    ];
+
+    snakeDir = {x: 1, y: 0};
+    snakeNextDir = {x: 1, y: 0};
+
+    snakePoints = 0;
+    snakeDead = false;
+
+    document.getElementById("snakeMessage").textContent = "";
+
+    snakeCreateApple();
+    snakeDraw();
+    snakeUpdateScore();
+}
+
+function snakeCreateApple() {
+
+    do {
+        snakeApple = {
+            x: Math.floor(Math.random() * snakeGrid),
+            y: Math.floor(Math.random() * snakeGrid)
+        };
+    }
+    while (
+        snakeBody.some(
+            part =>
+                part.x === snakeApple.x &&
+                part.y === snakeApple.y
+        )
+    );
+}
+
+function snakeUpdateScore() {
+
+    document.getElementById("snakeScore").textContent =
+        "Wynik: " + snakePoints;
+}
+
+function snakeDraw() {
+
+    snakeCtx.fillStyle = "#151515";
+
+    snakeCtx.fillRect(
+        0,
+        0,
+        snakeCanvas.width,
+        snakeCanvas.height
+    );
+
+    // JABŁKO 🍎
+    snakeCtx.font = "19px Arial";
+    snakeCtx.textAlign = "center";
+    snakeCtx.textBaseline = "middle";
+
+    snakeCtx.fillText(
+        "🍎",
+        snakeApple.x * snakeTile + snakeTile / 2,
+        snakeApple.y * snakeTile + snakeTile / 2
+    );
+
+    // WĄŻ 🐍
+    snakeBody.forEach((part, index) => {
+
+        snakeCtx.fillStyle =
+            index === 0 ? "#7cff4f" : "#35a832";
+
+        snakeCtx.fillRect(
+            part.x * snakeTile + 1,
+            part.y * snakeTile + 1,
+            snakeTile - 2,
+            snakeTile - 2
+        );
+    });
+}
+
+function snakeDirection(x, y) {
+
+    if (
+        snakeDir.x === -x &&
+        snakeDir.y === -y
+    ) {
+        return;
+    }
+
+    snakeNextDir = {
+        x: x,
+        y: y
+    };
+}
+
+function snakeMove() {
+
+    if (snakeDead) return;
+
+    snakeDir = snakeNextDir;
+
+    const head = {
+        x: snakeBody[0].x + snakeDir.x,
+        y: snakeBody[0].y + snakeDir.y
+    };
+
+    // ŚCIANA
+    if (
+        head.x < 0 ||
+        head.x >= snakeGrid ||
+        head.y < 0 ||
+        head.y >= snakeGrid
+    ) {
+        snakeGameOver();
+        return;
+    }
+
+    // WŁASNE CIAŁO
+    if (
+        snakeBody.some(
+            part =>
+                part.x === head.x &&
+                part.y === head.y
+        )
+    ) {
+        snakeGameOver();
+        return;
+    }
+
+    snakeBody.unshift(head);
+
+    // JABŁKO
+    if (
+        head.x === snakeApple.x &&
+        head.y === snakeApple.y
+    ) {
+
+        snakePoints++;
+
+        snakeUpdateScore();
+        snakeCreateApple();
+
+    } else {
+
+        snakeBody.pop();
+    }
+
+    snakeDraw();
+}
+
+function snakeGameOver() {
+
+    snakeDead = true;
+
+    document.getElementById("snakeMessage").textContent =
+        "💀 GAME OVER — wynik: " + snakePoints;
+}
+
+function snakeRestart() {
+    snakeStart();
+}
+
+
+// KLAWIATURA
+
+document.addEventListener("keydown", function(event) {
+
+    if (event.key === "ArrowUp") {
+        snakeDirection(0, -1);
+    }
+
+    if (event.key === "ArrowDown") {
+        snakeDirection(0, 1);
+    }
+
+    if (event.key === "ArrowLeft") {
+        snakeDirection(-1, 0);
+    }
+
+    if (event.key === "ArrowRight") {
+        snakeDirection(1, 0);
+    }
+
+});
+
+
+// START
+
+snakeStart();
+
+
+// PRĘDKOŚĆ
+
+setInterval(snakeMove, 120);
+
+</script>
