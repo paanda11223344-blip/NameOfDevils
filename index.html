@@ -4796,3 +4796,309 @@ function chaosAnswer(answer) {
 }
 
 </script>
+<!-- ===================================== -->
+<!-- 10 SECOND CLICKER -->
+<!-- ===================================== -->
+
+<div class="clicker-game">
+
+    <h2>🖱️ 10 SECOND CLICKER</h2>
+
+    <div class="clicker-stats">
+        <span>Clicks: <b id="clickCount">0</b></span>
+        <span>Time: <b id="clickTime">10.00</b>s</span>
+    </div>
+
+    <button id="clickButton" onclick="clickerPress()">
+        START
+    </button>
+
+    <div id="clickerResult">
+        Click START to begin!
+    </div>
+
+    <button
+        class="clicker-restart"
+        onclick="clickerStart()">
+        🔄 TRY AGAIN
+    </button>
+
+</div>
+
+
+<style>
+
+.clicker-game {
+
+    width: 94%;
+    max-width: 500px;
+
+    margin: 40px auto;
+    padding: 20px;
+
+    background: #151515;
+    color: white;
+
+    border: 2px solid #333;
+    border-radius: 20px;
+
+    text-align: center;
+}
+
+.clicker-game h2 {
+    margin-top: 0;
+}
+
+.clicker-stats {
+
+    display: flex;
+
+    justify-content: space-around;
+
+    margin: 15px 0;
+
+    font-size: 18px;
+}
+
+#clickButton {
+
+    width: min(80vw, 300px);
+    height: 180px;
+
+    border: 3px solid #555;
+    border-radius: 20px;
+
+    background: #292929;
+
+    color: white;
+
+    font-size: 35px;
+    font-weight: 900;
+
+    cursor: pointer;
+
+    user-select: none;
+
+    transition: .05s;
+}
+
+#clickButton:active {
+
+    transform: scale(.94);
+
+}
+
+#clickerResult {
+
+    min-height: 50px;
+
+    margin-top: 15px;
+
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.clicker-restart {
+
+    margin-top: 10px;
+
+    padding: 11px 22px;
+
+    border: none;
+    border-radius: 10px;
+
+    background: #333;
+
+    color: white;
+
+    font-weight: bold;
+
+    cursor: pointer;
+}
+
+</style>
+
+
+<script>
+
+let clickerClicks = 0;
+let clickerRunning = false;
+
+let clickerStartTime = 0;
+let clickerEndTime = 0;
+
+let clickerTimer = null;
+
+
+/*
+    START GRY
+*/
+
+function clickerStart() {
+
+    clearInterval(clickerTimer);
+
+    clickerClicks = 0;
+
+    clickerRunning = true;
+
+    clickerStartTime =
+        performance.now();
+
+    clickerEndTime =
+        clickerStartTime + 10000;
+
+
+    document.getElementById(
+        "clickCount"
+    ).textContent = "0";
+
+
+    document.getElementById(
+        "clickTime"
+    ).textContent = "10.00";
+
+
+    document.getElementById(
+        "clickerResult"
+    ).textContent =
+        "CLICK AS FAST AS YOU CAN! 😹";
+
+
+    document.getElementById(
+        "clickButton"
+    ).textContent =
+        "CLICK!";
+
+
+    /*
+        Aktualizacja czasu
+    */
+
+    clickerTimer =
+        setInterval(
+            clickerUpdateTime,
+            10
+        );
+}
+
+
+/*
+    KLIKNIĘCIE
+*/
+
+function clickerPress() {
+
+    if (!clickerRunning)
+        return;
+
+
+    const now =
+        performance.now();
+
+
+    /*
+        Jeśli czas już minął
+    */
+
+    if (now >= clickerEndTime) {
+
+        clickerFinish();
+
+        return;
+    }
+
+
+    clickerClicks++;
+
+
+    document.getElementById(
+        "clickCount"
+    ).textContent =
+        clickerClicks;
+}
+
+
+/*
+    LICZNIK CZASU
+*/
+
+function clickerUpdateTime() {
+
+    if (!clickerRunning)
+        return;
+
+
+    const now =
+        performance.now();
+
+
+    const remaining =
+        Math.max(
+            0,
+            clickerEndTime - now
+        );
+
+
+    document.getElementById(
+        "clickTime"
+    ).textContent =
+        (remaining / 1000)
+            .toFixed(2);
+
+
+    if (remaining <= 0) {
+
+        clickerFinish();
+    }
+}
+
+
+/*
+    KONIEC
+*/
+
+function clickerFinish() {
+
+    if (!clickerRunning)
+        return;
+
+
+    clickerRunning = false;
+
+    clearInterval(clickerTimer);
+
+
+    document.getElementById(
+        "clickTime"
+    ).textContent =
+        "0.00";
+
+
+    document.getElementById(
+        "clickButton"
+    ).textContent =
+        "DONE!";
+
+
+    /*
+        CPS
+    */
+
+    const cps =
+        (clickerClicks / 10)
+            .toFixed(2);
+
+
+    document.getElementById(
+        "clickerResult"
+    ).innerHTML =
+        "🏆 " +
+        clickerClicks +
+        " CLICKS<br>" +
+        "⚡ " +
+        cps +
+        " CLICKS PER SECOND";
+}
+
+</script>
