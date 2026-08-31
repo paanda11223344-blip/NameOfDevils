@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Skomplikowana Sekwencja</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    background:
+        radial-gradient(circle at top, #5a0b16 0%, #21050a 45%, #080103 100%);
+    color: #eeeeee;
+    font-family: monospace;
+    padding: 20px;
+}
+
+.container {
+    width: 100%;
+    max-width: 720px;
+    margin: 30px auto;
+}
+
+.card {
+    background: rgba(12, 3, 5, 0.95);
+    border: 1px solid #6e1727;
+    border-radius: 16px;
+    padding: 25px;
+    box-shadow: 0 0 35px rgba(150, 10, 30, 0.25);
+    text-align: center;
+}
+
+h1 {
+    color: #ff4059;
+    font-size: 24px;
+    margin: 0 0 12px;
+}
+
+.subtitle {
+    color: #b57b82;
+    line-height: 1.6;
+    margin-bottom: 25px;
+}
+
+textarea {
+    width: 100%;
+    min-height: 150px;
+    resize: vertical;
+    background: #050102;
+    color: #ffffff;
+    border: 1px solid #65202c;
+    border-radius: 10px;
+    padding: 15px;
+    font-family: monospace;
+    font-size: 16px;
+    outline: none;
+}
+
+textarea:focus {
+    border-color: #c32642;
+    box-shadow: 0 0 15px rgba(195, 38, 66, 0.2);
+}
+
+.main-button {
+    width: 100%;
+    margin-top: 15px;
+    padding: 15px;
+    border: none;
+    border-radius: 10px;
+    background: #a51d35;
+    color: white;
+    font-family: monospace;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.main-button:hover {
+    background: #c32642;
+}
+
+#error {
+    min-height: 25px;
+    margin-top: 15px;
+    color: #ff526a;
+}
+
+/* ODKRYTY NAPIS */
+
+.secret {
+    display: none;
+    margin-top: 25px;
+    padding: 25px;
+    background: #170307;
+    border: 1px solid #8d1b31;
+    border-radius: 12px;
+}
+
+.secret-title {
+    color: #ff4059;
+    font-size: 18px;
+    margin-bottom: 20px;
+}
+
+.secret-text {
+    color: #ffffff;
+    font-size: 22px;
+    line-height: 1.8;
+    white-space: pre-line;
+}
+
+.close-button {
+    margin-top: 20px;
+    padding: 11px 20px;
+    border: 1px solid #7d1b2d;
+    background: #28060c;
+    color: #ff7a8b;
+    border-radius: 8px;
+    font-family: monospace;
+    cursor: pointer;
+}
+
+.close-button:hover {
+    background: #4a0b16;
+}
+
+/* ARCADE */
+
+.arcade {
+    margin-top: 35px;
+    padding: 25px;
+    background: #180307;
+    border: 2px solid #761525;
+    border-radius: 16px;
+    box-shadow: 0 0 30px rgba(150, 10, 30, 0.3);
+    text-align: center;
+}
+
+.arcade h2 {
+    color: #e52b48;
+    margin: 0 0 8px;
+}
+
+.arcade-subtitle {
+    color: #9d666d;
+    margin-bottom: 20px;
+}
+
+.slots {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin: 25px 0;
+}
+
+.slot {
+    width: 90px;
+    height: 100px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #080104;
+    border: 2px solid #711526;
+    border-radius: 12px;
+    font-size: 45px;
+}
+
+.rolling {
+    animation: shake 0.07s infinite alternate;
+}
+
+@keyframes shake {
+    from {
+        transform: translateY(-3px);
+    }
+    to {
+        transform: translateY(3px);
+    }
+}
+
+.spin-button {
+    width: 100%;
+    padding: 16px;
+    border: none;
+    border-radius: 10px;
+    background: #a51d35;
+    color: white;
+    font-family: monospace;
+    font-size: 19px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 5px 0 #5b0c19;
+}
+
+.spin-button:hover {
+    background: #c32642;
+}
+
+.spin-button:active {
+    transform: translateY(5px);
+    box-shadow: none;
+}
+
+.spin-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.arcade-result {
+    min-height: 25px;
+    margin-top: 20px;
+    color: #ff526a;
+    font-weight: bold;
+}
+
+.jackpot {
+    animation: pulse 0.4s infinite alternate;
+}
+
+@keyframes pulse {
+    from {
+        transform: scale(1);
+        text-shadow: 0 0 8px #ff1738;
+    }
+    to {
+        transform: scale(1.08);
+        text-shadow: 0 0 25px #ff1738;
+    }
+}
+
+@media (max-width: 450px) {
+    .slot {
+        width: 75px;
+        height: 85px;
+        font-size: 38px;
+    }
+
+    .slots {
+        gap: 6px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <!-- SZYFR -->
+
+    <div class="card">
+
+        <h1>
+            Chcesz poznać imię diabła - spróbuj rozwiązać szyfr
+        </h1>
+
+        <div class="subtitle">
+            Skomplikowana sekwencja dwustu szesnastu cyfr
+        </div>
+
+        <textarea
+            id="codeInput"
+            placeholder="Wpisz tutaj 216 cyfr..."
+        ></textarea>
+
+        <button
+            class="main-button"
+            onclick="checkCode()"
+        >
+            SPRAWDŹ SZYFR
+        </button>
+
+        <div id="error"></div>
+
+        <div
+            class="secret"
+            id="secret"
+        >
+
+            <div class="secret-title">
+                ☠️ SEKRET ODKRYTY ☠️
+            </div>
+
+            <div class="secret-text">paanda
+mleko
+yoda
+polax</div>
+
+            <button
+                class="close-button"
+                onclick="closeSecret()"
+            >
+                WRÓĆ
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- DARK ARCADE -->
+
+    <div class="arcade">
+
+        <h2>🩸 DARK ARCADE</h2>
+
+        <div class="arcade-subtitle">
+            Czysto dla zabawy
+        </div>
+
+        <div class="slots">
+
+            <div class="slot" id="slot1">👿</div>
+            <div class="slot" id="slot2">👿</div>
+            <div class="slot" id="slot3">👿</div>
+
+        </div>
+
+        <button
+            class="spin-button"
+            id="spinButton"
+        >
+            LOSUJ 🔴
+        </button>
+
+        <div
+            class="arcade-result"
+            id="arcadeResult"
+        >
+            Kliknij przycisk.
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+/* =========================
+   SZYFR 216 CYFR
+   ========================= */
+
+const correctCode =
+"159670553584694888530414737969552380061012356399460231735438433647461260725491449900704187310424756994471214196769050920320506043361169092981329326756828442897314193348801985885579711341956761157306653345891884989170";
+
+
+function checkCode() {
+
+    const input =
+        document.getElementById("codeInput").value.trim();
+
+    const error =
+        document.getElementById("error");
+
+    const secret =
+        document.getElementById("secret");
+
+
+    if (input === correctCode) {
+
+        secret.style.display = "block";
+
+        error.textContent = "";
+
+        document.getElementById("codeInput").value = "";
+
+    } else {
+
+        secret.style.display = "none";
+
+        if (input.length === 0) {
+
+            error.textContent =
+                "Wpisz szyfr.";
+
+        } else if (input.length !== 216) {
+
+            error.textContent =
+                "Błędna długość. Szyfr ma 216 cyfr.";
+
+        } else {
+
+            error.textContent =
+                "❌ Błędna sekwencja.";
+
+        }
+
+    }
+
+}
+
+
+function closeSecret() {
+
+    document.getElementById("secret").style.display = "none";
+
+    document.getElementById("codeInput").value = "";
+
+    document.getElementById("error").textContent = "";
+
+}
+
+
+/* =========================
+   DARK ARCADE
+   ========================= */
+
+const symbols = [
+    { icon: "👿", weight: 50 },
+    { icon: "😾", weight: 30 },
+    { icon: "❤️‍🔥", weight: 14 },
+    { icon: "🪙", weight: 5 },
+    { icon: "6️⃣", weight: 1 }
+];
+
+
+function randomSymbol() {
+
+    const total =
+        symbols.reduce(
+            (sum, item) => sum + item.weight,
+            0
+        );
+
+    let random =
+        Math.random() * total;
+
+
+    for (const item of symbols) {
+
+        random -= item.weight;
+
+        if (random < 0) {
+            return item.icon;
+        }
+
+    }
+
+    return "👿";
+}
+
+
+function wait(ms) {
+
+    return new Promise(
+        resolve => setTimeout(resolve, ms)
+    );
+
+}
+
+
+const spinButton =
+    document.getElementById("spinButton");
+
+const arcadeResult =
+    document.getElementById("arcadeResult");
+
+const slots = [
+    document.getElementById("slot1"),
+    document.getElementById("slot2"),
+    document.getElementById("slot3")
+];
+
+
+spinButton.addEventListener(
+    "click",
+    async function () {
+
+        spinButton.disabled = true;
+
+        arcadeResult.className =
+            "arcade-result";
+
+        arcadeResult.textContent =
+            "LOSOWANIE...";
+
+
+        slots.forEach(
+            slot =>
+                slot.classList.add("rolling")
+        );
+
+
+        const animation =
+            setInterval(
+                function () {
+
+                    slots.forEach(
+                        slot => {
+                            slot.textContent =
+                                randomSymbol();
+                        }
+                    );
+
+                },
+                65
+            );
+
+
+        await wait(700);
+
+        clearInterval(animation);
+
+
+        const result = [
+            randomSymbol(),
+            randomSymbol(),
+            randomSymbol()
+        ];
+
+
+        for (let i = 0; i < 3; i++) {
+
+            await wait(180);
+
+            slots[i].textContent =
+                result[i];
+
+        }
+
+
+        slots.forEach(
+            slot =>
+                slot.classList.remove("rolling")
+        );
+
+
+        if (
+            result[0] === "6️⃣" &&
+            result[1] === "6️⃣" &&
+            result[2] === "6️⃣"
+        ) {
+
+            arcadeResult.textContent =
+                "🔥🔥🔥 TRZY SZÓSTKI! 🔥🔥🔥";
+
+            arcadeResult.className =
+                "arcade-result jackpot";
+
+        }
+
+        else if (
+            result[0] === result[1] &&
+            result[1] === result[2]
+        ) {
+
+            arcadeResult.textContent =
+                "😈 TRZY TAKIE SAME!";
+
+        }
+
+        else if (
+            result[0] === result[1] ||
+            result[1] === result[2] ||
+            result[0] === result[2]
+        ) {
+
+            arcadeResult.textContent =
+                "❤️‍🔥 PARA!";
+
+        }
+
+        else {
+
+            arcadeResult.textContent =
+                "😾 Tym razem nic!";
+
+        }
+
+
+        spinButton.disabled = false;
+
+    }
+);
+
+</script>
+
+</body>
+</html>
