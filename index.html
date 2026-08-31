@@ -5102,3 +5102,789 @@ function clickerFinish() {
 }
 
 </script>
+<!-- ===================================== -->
+<!-- PAANDA FLAPPY -->
+<!-- ===================================== -->
+
+<div class="paanda-flappy">
+
+    <h2>🐼 PAANDA FLAPPY</h2>
+
+    <div class="flappy-score">
+        Score: <span id="flappyScore">0</span>
+        &nbsp; | &nbsp;
+        Best: <span id="flappyBest">0</span>
+    </div>
+
+    <div id="flappyGame">
+        <div id="flappyPanda">🐼</div>
+
+        <div id="flappyMessage">
+            PRESS START
+        </div>
+    </div>
+
+    <button
+        class="flappy-button"
+        onclick="flappyStart()">
+        ▶️ START
+    </button>
+
+    <p class="flappy-help">
+        Tap the screen or press SPACE to flap!
+    </p>
+
+</div>
+
+
+<style>
+
+.paanda-flappy {
+
+    width: 94%;
+    max-width: 500px;
+
+    margin: 40px auto;
+    padding: 20px;
+
+    background: #151515;
+    color: white;
+
+    border: 2px solid #333;
+    border-radius: 20px;
+
+    text-align: center;
+
+    user-select: none;
+}
+
+.paanda-flappy h2 {
+    margin-top: 0;
+}
+
+.flappy-score {
+
+    margin-bottom: 12px;
+
+    font-size: 18px;
+    font-weight: bold;
+}
+
+#flappyGame {
+
+    position: relative;
+
+    width: min(90vw, 400px);
+    height: 520px;
+
+    margin: auto;
+
+    overflow: hidden;
+
+    border: 3px solid #444;
+    border-radius: 15px;
+
+    background:
+        linear-gradient(
+            #75c9f5 0%,
+            #c9f0ff 75%,
+            #7bc96f 75%,
+            #5aa64d 100%
+        );
+
+    cursor: pointer;
+}
+
+#flappyPanda {
+
+    position: absolute;
+
+    left: 70px;
+    top: 230px;
+
+    width: 45px;
+    height: 45px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 38px;
+
+    z-index: 5;
+
+    transition: transform .05s linear;
+}
+
+.flappy-pipe {
+
+    position: absolute;
+
+    width: 55px;
+
+    background: #39a852;
+
+    border: 3px solid #237936;
+
+    box-sizing: border-box;
+
+    z-index: 2;
+}
+
+.flappy-pipe::after {
+
+    content: "";
+
+    position: absolute;
+
+    left: -7px;
+
+    width: 63px;
+    height: 18px;
+
+    background: #45bd5c;
+
+    border: 3px solid #237936;
+
+    box-sizing: border-box;
+}
+
+.flappy-top {
+    top: 0;
+}
+
+.flappy-top::after {
+    bottom: -3px;
+}
+
+.flappy-bottom::after {
+    top: -3px;
+}
+
+#flappyMessage {
+
+    position: absolute;
+
+    top: 45%;
+
+    left: 0;
+    right: 0;
+
+    text-align: center;
+
+    font-size: 28px;
+    font-weight: 900;
+
+    text-shadow:
+        2px 2px 4px #000;
+
+    z-index: 10;
+
+    pointer-events: none;
+}
+
+.flappy-button {
+
+    margin-top: 15px;
+
+    padding: 12px 25px;
+
+    border: none;
+    border-radius: 10px;
+
+    background: #333;
+    color: white;
+
+    font-size: 17px;
+    font-weight: bold;
+
+    cursor: pointer;
+}
+
+.flappy-button:active {
+
+    transform: scale(.94);
+}
+
+.flappy-help {
+
+    color: #aaa;
+
+    font-size: 13px;
+
+    margin-bottom: 0;
+}
+
+</style>
+
+
+<script>
+
+let flappyRunning = false;
+
+let flappyPanda = null;
+
+let flappyVelocity = 0;
+
+let flappyPipes = [];
+
+let flappyScore = 0;
+
+let flappyBest =
+    Number(
+        localStorage.getItem(
+            "paandaFlappyBest"
+        )
+    ) || 0;
+
+let flappyLastTime = 0;
+
+let flappySpawnTimer = 0;
+
+
+/*
+    USTAW BEST
+*/
+
+document.getElementById(
+    "flappyBest"
+).textContent =
+    flappyBest;
+
+
+/*
+    START
+*/
+
+function flappyStart() {
+
+    const game =
+        document.getElementById(
+            "flappyGame"
+        );
+
+    /*
+        Usuń stare rury
+    */
+
+    game.querySelectorAll(
+        ".flappy-pipe"
+    ).forEach(
+        pipe => pipe.remove()
+    );
+
+
+    flappyPipes = [];
+
+    flappyScore = 0;
+
+    flappyVelocity = 0;
+
+    flappySpawnTimer = 0;
+
+    flappyRunning = true;
+
+    flappyPanda = {
+
+        x: 70,
+
+        y: 230,
+
+        width: 45,
+
+        height: 45
+
+    };
+
+
+    document.getElementById(
+        "flappyScore"
+    ).textContent = "0";
+
+
+    document.getElementById(
+        "flappyMessage"
+    ).textContent = "";
+
+
+    document.getElementById(
+        "flappyPanda"
+    ).style.top =
+        "230px";
+
+
+    flappyLastTime =
+        performance.now();
+
+
+    flappyLoop();
+}
+
+
+/*
+    SKOK PANDY
+*/
+
+function flappyFlap() {
+
+    if (!flappyRunning)
+        return;
+
+
+    flappyVelocity = -7.5;
+}
+
+
+/*
+    KLIK / DOTYK
+*/
+
+document.getElementById(
+    "flappyGame"
+).addEventListener(
+    "pointerdown",
+    function(event) {
+
+        event.preventDefault();
+
+        flappyFlap();
+
+    }
+);
+
+
+/*
+    SPACE
+*/
+
+document.addEventListener(
+    "keydown",
+    function(event) {
+
+        if (
+            event.code === "Space"
+        ) {
+
+            event.preventDefault();
+
+            flappyFlap();
+
+        }
+
+    }
+);
+
+
+/*
+    TWORZENIE RURY
+*/
+
+function flappyCreatePipe() {
+
+    const game =
+        document.getElementById(
+            "flappyGame"
+        );
+
+
+    /*
+        Rozmiar dziury
+    */
+
+    const gap = 145;
+
+
+    /*
+        Losowa wysokość
+    */
+
+    const topHeight =
+        80 +
+        Math.random() * 220;
+
+
+    /*
+        GÓRNA RURA
+    */
+
+    const top =
+        document.createElement("div");
+
+    top.className =
+        "flappy-pipe flappy-top";
+
+    top.style.height =
+        topHeight + "px";
+
+    top.style.left =
+        "100%";
+
+
+    /*
+        DOLNA RURA
+    */
+
+    const bottom =
+        document.createElement("div");
+
+    bottom.className =
+        "flappy-pipe flappy-bottom";
+
+
+    const bottomHeight =
+        520 -
+        topHeight -
+        gap;
+
+
+    bottom.style.height =
+        bottomHeight + "px";
+
+    bottom.style.left =
+        "100%";
+
+
+    game.appendChild(top);
+    game.appendChild(bottom);
+
+
+    flappyPipes.push({
+
+        top: top,
+
+        bottom: bottom,
+
+        x: game.clientWidth,
+
+        topHeight: topHeight,
+
+        gap: gap,
+
+        passed: false
+
+    });
+
+}
+
+
+/*
+    GŁÓWNA PĘTLA
+*/
+
+function flappyLoop() {
+
+    if (!flappyRunning)
+        return;
+
+
+    const now =
+        performance.now();
+
+
+    let delta =
+        (now - flappyLastTime) /
+        16.67;
+
+
+    /*
+        Ograniczenie dużych skoków czasu
+    */
+
+    delta =
+        Math.min(delta, 2);
+
+
+    flappyLastTime = now;
+
+
+    /*
+        GRAWITACJA
+    */
+
+    flappyVelocity +=
+        0.42 * delta;
+
+
+    flappyPanda.y +=
+        flappyVelocity * delta;
+
+
+    /*
+        Obrót pandy
+    */
+
+    const rotation =
+        Math.max(
+            -20,
+            Math.min(
+                70,
+                flappyVelocity * 5
+            )
+        );
+
+
+    const pandaElement =
+        document.getElementById(
+            "flappyPanda"
+        );
+
+
+    pandaElement.style.top =
+        flappyPanda.y + "px";
+
+
+    pandaElement.style.transform =
+        "rotate(" +
+        rotation +
+        "deg)";
+
+
+    /*
+        TWORZENIE RUR
+    */
+
+    flappySpawnTimer +=
+        delta * 16.67;
+
+
+    if (
+        flappySpawnTimer >= 1500
+    ) {
+
+        flappySpawnTimer = 0;
+
+        flappyCreatePipe();
+    }
+
+
+    /*
+        RUCH RUR
+    */
+
+    for (
+        let i = flappyPipes.length - 1;
+        i >= 0;
+        i--
+    ) {
+
+        const pipe =
+            flappyPipes[i];
+
+
+        pipe.x -=
+            3.0 * delta;
+
+
+        pipe.top.style.left =
+            pipe.x + "px";
+
+
+        pipe.bottom.style.left =
+            pipe.x + "px";
+
+
+        /*
+            PUNKT
+        */
+
+        if (
+            !pipe.passed &&
+            pipe.x + 55 <
+            flappyPanda.x
+        ) {
+
+            pipe.passed = true;
+
+            flappyScore++;
+
+
+            document.getElementById(
+                "flappyScore"
+            ).textContent =
+                flappyScore;
+        }
+
+
+        /*
+            USUŃ RURY
+        */
+
+        if (
+            pipe.x < -70
+        ) {
+
+            pipe.top.remove();
+            pipe.bottom.remove();
+
+            flappyPipes.splice(
+                i,
+                1
+            );
+
+            continue;
+        }
+
+
+        /*
+            KOLIZJA
+        */
+
+        if (
+            flappyCollision(
+                pipe
+            )
+        ) {
+
+            flappyGameOver();
+
+            return;
+        }
+    }
+
+
+    /*
+        GÓRA / DÓŁ
+    */
+
+    if (
+        flappyPanda.y < 0 ||
+        flappyPanda.y +
+        flappyPanda.height >
+        520
+    ) {
+
+        flappyGameOver();
+
+        return;
+    }
+
+
+    requestAnimationFrame(
+        flappyLoop
+    );
+}
+
+
+/*
+    KOLIZJA
+*/
+
+function flappyCollision(
+    pipe
+) {
+
+    const px =
+        flappyPanda.x + 7;
+
+    const py =
+        flappyPanda.y + 7;
+
+    const pw =
+        flappyPanda.width - 14;
+
+    const ph =
+        flappyPanda.height - 14;
+
+
+    const pipeX =
+        pipe.x;
+
+    const pipeWidth =
+        55;
+
+
+    /*
+        Czy panda znajduje się
+        w poziomie rury?
+    */
+
+    if (
+        px + pw < pipeX ||
+        px > pipeX + pipeWidth
+    ) {
+
+        return false;
+    }
+
+
+    /*
+        Górna rura
+    */
+
+    if (
+        py <
+        pipe.topHeight
+    ) {
+
+        return true;
+    }
+
+
+    /*
+        Dolna rura
+    */
+
+    const bottomStart =
+        pipe.topHeight +
+        pipe.gap;
+
+
+    if (
+        py + ph >
+        bottomStart
+    ) {
+
+        return true;
+    }
+
+
+    return false;
+}
+
+
+/*
+    GAME OVER
+*/
+
+function flappyGameOver() {
+
+    flappyRunning = false;
+
+
+    /*
+        BEST
+    */
+
+    if (
+        flappyScore >
+        flappyBest
+    ) {
+
+        flappyBest =
+            flappyScore;
+
+
+        localStorage.setItem(
+            "paandaFlappyBest",
+            flappyBest
+        );
+
+
+        document.getElementById(
+            "flappyBest"
+        ).textContent =
+            flappyBest;
+    }
+
+
+    document.getElementById(
+        "flappyMessage"
+    ).innerHTML =
+        "💀 GAME OVER<br>" +
+        "<span style='font-size:18px'>" +
+        "Score: " +
+        flappyScore +
+        "</span>";
+}
+
+            </script>
