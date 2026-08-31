@@ -1371,3 +1371,809 @@ function checkSaperWin() {
 }
 
     </script>
+<!-- BARRICADE 9x9 -->
+
+<div class="barricade-game">
+
+    <h2>🚧 BARRICADE</h2>
+
+    <div class="barricade-info">
+        🔴 TY &nbsp;&nbsp; 🟢 BOT
+    </div>
+
+    <div class="barricade-stats">
+        🎲 Rzut: <span id="bDice">-</span>
+        <br>
+        🚧 Barykady: <span id="bBarricades">10</span>
+    </div>
+
+    <div id="bBoard"></div>
+
+    <div id="bStatus">
+        Twój ruch 🔴
+    </div>
+
+    <button id="bRoll" onclick="bRollDice()">
+        🎲 RZUĆ KOSTKĄ
+    </button>
+
+    <button class="bRestart" onclick="bRestart()">
+        🔄 NOWA GRA
+    </button>
+
+</div>
+
+
+<style>
+
+.barricade-game {
+    width: 94%;
+    max-width: 480px;
+    margin: 40px auto;
+    padding: 20px;
+    background: #151515;
+    border: 2px solid #333;
+    border-radius: 20px;
+    text-align: center;
+    color: white;
+}
+
+.barricade-game h2 {
+    margin-top: 0;
+}
+
+.barricade-info {
+    margin-bottom: 10px;
+}
+
+.barricade-stats {
+    line-height: 1.8;
+    margin-bottom: 12px;
+}
+
+#bBoard {
+    width: min(90vw, 405px);
+    aspect-ratio: 1;
+
+    margin: auto;
+
+    display: grid;
+    grid-template-columns: repeat(9, 1fr);
+    grid-template-rows: repeat(9, 1fr);
+
+    gap: 2px;
+
+    background: #080808;
+    padding: 4px;
+    border-radius: 10px;
+}
+
+.b-cell {
+    background: #292929;
+    border-radius: 4px;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    font-size: clamp(14px, 6vw, 30px);
+}
+
+.b-path {
+    background: #353535;
+}
+
+.b-start-player {
+    background: #351515;
+}
+
+.b-start-bot {
+    background: #15351c;
+}
+
+.b-player {
+    background: #641919;
+}
+
+.b-bot {
+    background: #1d632b;
+}
+
+.b-block {
+    background: #5b5014;
+}
+
+#bStatus {
+    min-height: 25px;
+    margin: 15px 0 10px;
+    font-weight: bold;
+}
+
+#bRoll,
+.bRestart {
+    border: none;
+    border-radius: 10px;
+    padding: 12px 20px;
+    margin: 4px;
+
+    background: #333;
+    color: white;
+
+    font-size: 17px;
+    font-weight: bold;
+
+    cursor: pointer;
+}
+
+#bRoll:disabled {
+    opacity: .4;
+}
+
+.bRestart {
+    font-size: 14px;
+}
+
+</style>
+
+
+<script>
+
+const B_SIZE = 9;
+
+let bPlayer;
+let bBot;
+
+let bTurn;
+let bDice;
+
+let bBlocks = [];
+
+let bGameOver = false;
+
+
+/*
+    TRASA
+
+    Zaczynasz na dole po lewej.
+    Bot zaczyna na górze po prawej.
+
+    Trasa prowadzi zygzakiem przez
+    całą planszę.
+*/
+
+const bPath = [];
+
+for (let y = 0; y < B_SIZE; y++) {
+
+    if (y % 2 === 0) {
+
+        for (let x = 0; x < B_SIZE; x++) {
+
+            bPath.push({
+                x: x,
+                y: y
+            });
+
+        }
+
+    } else {
+
+        for (let x = B_SIZE - 1; x >= 0; x--) {
+
+            bPath.push({
+                x: x,
+                y: y
+            });
+
+        }
+    }
+}
+
+
+/*
+    START
+*/
+
+function bRestart() {
+
+    /*
+        TY:
+        pierwszy punkt trasy
+    */
+
+    bPlayer = {
+        x: bPath[0].x,
+        y: bPath[0].y
+    };
+
+
+    /*
+        BOT:
+        ostatni punkt trasy
+    */
+
+    bBot = {
+        x: bPath[bPath.length - 1].x,
+        y: bPath[bPath.length - 1].y
+    };
+
+
+    bBlocks = [];
+
+    bTurn = "player";
+    bDice = 0;
+    bGameOver = false;
+
+    document.getElementById("bDice")
+        .textContent = "-";
+
+    document.getElementById("bBarricades")
+        .textContent = "10";
+
+    document.getElementById("bStatus")
+        .textContent = "Twój ruch 🔴";
+
+    document.getElementById("bRoll")
+        .disabled = false;
+
+    bDraw();
+}
+
+
+/*
+    RYSOWANIE
+*/
+
+function bDraw() {
+
+    const board =
+        document.getElementById("bBoard");
+
+    board.innerHTML = "";
+
+
+    for (let y = 0; y < B_SIZE; y++) {
+
+        for (let x = 0; x < B_SIZE; x++) {
+
+            const cell =
+                document.createElement("div");
+
+            cell.className = "b-cell";
+
+
+            /*
+                TRASA
+            */
+
+            const onPath =
+                bPath.some(
+                    p =>
+                        p.x === x &&
+                        p.y === y
+                );
+
+            if (onPath) {
+                cell.classList.add("b-path");
+            }
+
+
+            /*
+                SPAWN GRACZA
+            */
+
+            if (
+                x === bPath[0].x &&
+                y === bPath[0].y
+            ) {
+
+                cell.classList.add(
+                    "b-start-player"
+                );
+            }
+
+
+            /*
+                SPAWN BOTA
+            */
+
+            if (
+                x === bPath[bPath.length - 1].x &&
+                y === bPath[bPath.length - 1].y
+            ) {
+
+                cell.classList.add(
+                    "b-start-bot"
+                );
+            }
+
+
+            /*
+                BARYKADA
+            */
+
+            if (
+                bBlocks.some(
+                    block =>
+                        block.x === x &&
+                        block.y === y
+                )
+            ) {
+
+                cell.textContent = "🚧";
+
+                cell.classList.add(
+                    "b-block"
+                );
+            }
+
+
+            /*
+                GRACZ
+            */
+
+            if (
+                bPlayer.x === x &&
+                bPlayer.y === y
+            ) {
+
+                cell.textContent = "🔴";
+
+                cell.classList.add(
+                    "b-player"
+                );
+            }
+
+
+            /*
+                BOT
+            */
+
+            if (
+                bBot.x === x &&
+                bBot.y === y
+            ) {
+
+                cell.textContent = "🟢";
+
+                cell.classList.add(
+                    "b-bot"
+                );
+            }
+
+
+            board.appendChild(cell);
+        }
+    }
+}
+
+
+/*
+    RZUT KOSTKĄ
+*/
+
+function bRollDice() {
+
+    if (
+        bGameOver ||
+        bTurn !== "player"
+    ) {
+        return;
+    }
+
+    bDice =
+        Math.floor(Math.random() * 6) + 1;
+
+    document.getElementById("bDice")
+        .textContent = bDice;
+
+    document.getElementById("bRoll")
+        .disabled = true;
+
+    document.getElementById("bStatus")
+        .textContent =
+        "Rzut: " + bDice + " 🎲";
+
+
+    setTimeout(() => {
+
+        bMovePlayer();
+
+    }, 500);
+}
+
+
+/*
+    RUCH GRACZA
+*/
+
+function bMovePlayer() {
+
+    const current =
+        bPath.findIndex(
+            p =>
+                p.x === bPlayer.x &&
+                p.y === bPlayer.y
+        );
+
+
+    let target = current + bDice;
+
+
+    /*
+        Nie można wyjść poza planszę
+    */
+
+    if (target >= bPath.length) {
+
+        bStatusText(
+            "Nie możesz wykonać tego ruchu 😾"
+        );
+
+        setTimeout(() => {
+
+            bStartBotTurn();
+
+        }, 700);
+
+        return;
+    }
+
+
+    /*
+        SPRAWDZENIE BARYKADY
+    */
+
+    for (
+        let i = current + 1;
+        i <= target;
+        i++
+    ) {
+
+        const position = bPath[i];
+
+        if (
+            bBlocks.some(
+                block =>
+                    block.x === position.x &&
+                    block.y === position.y
+            )
+        ) {
+
+            bStatusText(
+                "🚧 Barykada blokuje drogę!"
+            );
+
+            setTimeout(() => {
+
+                bStartBotTurn();
+
+            }, 700);
+
+            return;
+        }
+    }
+
+
+    /*
+        PRZESUNIĘCIE
+    */
+
+    bPlayer = {
+        x: bPath[target].x,
+        y: bPath[target].y
+    };
+
+
+    /*
+        ZBICIE BOTA
+    */
+
+    if (
+        bPlayer.x === bBot.x &&
+        bPlayer.y === bBot.y
+    ) {
+
+        bBot = {
+            x: bPath[bPath.length - 1].x,
+            y: bPath[bPath.length - 1].y
+        };
+
+        bStatusText(
+            "💥 Zbiłeś bota!"
+        );
+    }
+
+
+    /*
+        DOTARCIE DO SPAWNA BOTA
+    */
+
+    if (
+        bPlayer.x === bPath[bPath.length - 1].x &&
+        bPlayer.y === bPath[bPath.length - 1].y
+    ) {
+
+        bWin("🏆 WYGRAŁEŚ! 🔴");
+
+        return;
+    }
+
+
+    /*
+        BARYKADA
+    */
+
+    bPlaceBarricade();
+
+    bDraw();
+
+
+    /*
+        BOT
+    */
+
+    setTimeout(() => {
+
+        bStartBotTurn();
+
+    }, 700);
+}
+
+
+/*
+    STAWIANIE BARYKAD
+*/
+
+function bPlaceBarricade() {
+
+    if (bBlocks.length >= 10)
+        return;
+
+
+    const free = bPath.filter(position => {
+
+        const playerHere =
+            position.x === bPlayer.x &&
+            position.y === bPlayer.y;
+
+        const botHere =
+            position.x === bBot.x &&
+            position.y === bBot.y;
+
+        const alreadyBlock =
+            bBlocks.some(
+                block =>
+                    block.x === position.x &&
+                    block.y === position.y
+            );
+
+        /*
+            Nie stawiamy barykady
+            na pionku ani na końcach.
+        */
+
+        const start =
+            position === bPath[0];
+
+        const finish =
+            position === bPath[bPath.length - 1];
+
+        return (
+            !playerHere &&
+            !botHere &&
+            !alreadyBlock &&
+            !start &&
+            !finish
+        );
+    });
+
+
+    if (free.length === 0)
+        return;
+
+
+    const chosen =
+        free[
+            Math.floor(
+                Math.random() * free.length
+            )
+        ];
+
+
+    bBlocks.push({
+        x: chosen.x,
+        y: chosen.y
+    });
+
+
+    document.getElementById("bBarricades")
+        .textContent =
+        10 - bBlocks.length;
+}
+
+
+/*
+    RUCH BOTA
+*/
+
+function bStartBotTurn() {
+
+    if (bGameOver)
+        return;
+
+    bTurn = "bot";
+
+    document.getElementById("bStatus")
+        .textContent =
+        "Bot rzuca... 🟢";
+
+
+    setTimeout(() => {
+
+        bBotMove();
+
+    }, 800);
+}
+
+
+function bBotMove() {
+
+    bDice =
+        Math.floor(Math.random() * 6) + 1;
+
+
+    document.getElementById("bDice")
+        .textContent = bDice;
+
+
+    const current =
+        bPath.findIndex(
+            p =>
+                p.x === bBot.x &&
+                p.y === bBot.y
+        );
+
+
+    let target = current - bDice;
+
+
+    /*
+        Bot idzie w stronę
+        spawna gracza.
+    */
+
+    if (target < 0) {
+
+        target = 0;
+    }
+
+
+    /*
+        BARYKADA
+    */
+
+    let blocked = false;
+
+    for (
+        let i = current - 1;
+        i >= target;
+        i--
+    ) {
+
+        const position = bPath[i];
+
+        if (
+            bBlocks.some(
+                block =>
+                    block.x === position.x &&
+                    block.y === position.y
+            )
+        ) {
+
+            blocked = true;
+            break;
+        }
+    }
+
+
+    if (!blocked) {
+
+        bBot = {
+            x: bPath[target].x,
+            y: bPath[target].y
+        };
+
+
+        /*
+            ZBICIE GRACZA
+        */
+
+        if (
+            bBot.x === bPlayer.x &&
+            bBot.y === bPlayer.y
+        ) {
+
+            bPlayer = {
+                x: bPath[0].x,
+                y: bPath[0].y
+            };
+
+            document.getElementById("bStatus")
+                .textContent =
+                "💥 Bot Cię zbił!";
+        }
+    }
+
+
+    /*
+        BOT DOTARŁ DO TWOJEGO SPAWNA
+    */
+
+    if (
+        bBot.x === bPath[0].x &&
+        bBot.y === bPath[0].y
+    ) {
+
+        bWin("😾 BOT WYGRAŁ!");
+
+        return;
+    }
+
+
+    /*
+        BOT TEŻ MOŻE STAWIAĆ BARYKADY
+    */
+
+    bPlaceBarricade();
+
+    bDraw();
+
+
+    /*
+        TWOJA KOLEJ
+    */
+
+    bTurn = "player";
+
+    document.getElementById("bRoll")
+        .disabled = false;
+
+    document.getElementById("bStatus")
+        .textContent =
+        "Twój ruch 🔴 — rzuć kostką 🎲";
+}
+
+
+/*
+    WYGRANA / PRZEGRANA
+*/
+
+function bWin(text) {
+
+    bGameOver = true;
+
+    document.getElementById("bStatus")
+        .textContent = text;
+
+    document.getElementById("bRoll")
+        .disabled = true;
+
+    bDraw();
+}
+
+
+/*
+    STATUS
+*/
+
+function bStatusText(text) {
+
+    document.getElementById("bStatus")
+        .textContent = text;
+}
+
+
+bRestart();
+
+</script>
