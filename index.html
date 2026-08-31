@@ -4245,3 +4245,554 @@ function reactionClick() {
 }
 
 </script>
+<!-- ===================================== -->
+<!-- FRUIT NINJA -->
+<!-- ===================================== -->
+
+<div class="fruit-game">
+
+    <h2>🍉 FRUIT NINJA</h2>
+
+    <div class="fruit-score">
+        Score: <span id="fruitScore">0</span>
+        &nbsp; | &nbsp;
+        Misses: <span id="fruitMisses">0</span>/3
+    </div>
+
+    <div id="fruitArena"></div>
+
+    <button class="fruit-start" onclick="fruitStart()">
+        🔪 START
+    </button>
+
+    <div id="fruitStatus"></div>
+
+</div>
+
+
+<style>
+
+.fruit-game {
+    width: 94%;
+    max-width: 500px;
+
+    margin: 40px auto;
+    padding: 20px;
+
+    background: #151515;
+    color: white;
+
+    border: 2px solid #333;
+    border-radius: 20px;
+
+    text-align: center;
+}
+
+#fruitArena {
+
+    width: 100%;
+    height: 360px;
+
+    margin: 15px auto;
+
+    position: relative;
+    overflow: hidden;
+
+    border-radius: 15px;
+
+    background: #202020;
+
+    border: 2px solid #444;
+}
+
+.fruit {
+    position: absolute;
+
+    font-size: 45px;
+
+    cursor: pointer;
+
+    user-select: none;
+
+    animation: fruitFloat .5s ease-out;
+}
+
+@keyframes fruitFloat {
+
+    from {
+        transform: scale(.4);
+    }
+
+    to {
+        transform: scale(1);
+    }
+
+}
+
+.fruit-start {
+
+    padding: 12px 25px;
+
+    border: none;
+    border-radius: 10px;
+
+    background: #333;
+
+    color: white;
+
+    font-size: 17px;
+    font-weight: bold;
+
+    cursor: pointer;
+}
+
+#fruitStatus {
+
+    min-height: 25px;
+
+    margin-top: 12px;
+
+    font-weight: bold;
+}
+
+</style>
+
+
+<script>
+
+let fruitScore = 0;
+let fruitMisses = 0;
+let fruitRunning = false;
+let fruitTimer = null;
+
+const fruits = [
+    "🍎",
+    "🍉",
+    "🍊",
+    "🍋",
+    "🍌",
+    "🍓",
+    "🍇",
+    "🥝"
+];
+
+
+function fruitStart() {
+
+    clearInterval(fruitTimer);
+
+    fruitScore = 0;
+    fruitMisses = 0;
+    fruitRunning = true;
+
+    document.getElementById("fruitScore")
+        .textContent = "0";
+
+    document.getElementById("fruitMisses")
+        .textContent = "0";
+
+    document.getElementById("fruitStatus")
+        .textContent = "";
+
+    document.getElementById("fruitArena")
+        .innerHTML = "";
+
+
+    fruitTimer = setInterval(
+        spawnFruit,
+        750
+    );
+}
+
+
+function spawnFruit() {
+
+    if (!fruitRunning)
+        return;
+
+
+    const arena =
+        document.getElementById(
+            "fruitArena"
+        );
+
+
+    const fruit =
+        document.createElement("div");
+
+
+    fruit.className = "fruit";
+
+    fruit.textContent =
+        fruits[
+            Math.floor(
+                Math.random() *
+                fruits.length
+            )
+        ];
+
+
+    const maxX =
+        arena.clientWidth - 55;
+
+    const maxY =
+        arena.clientHeight - 55;
+
+
+    fruit.style.left =
+        Math.random() * maxX + "px";
+
+    fruit.style.top =
+        Math.random() * maxY + "px";
+
+
+    fruit.onclick = function() {
+
+        if (!fruitRunning)
+            return;
+
+        fruitScore++;
+
+        document.getElementById(
+            "fruitScore"
+        ).textContent =
+            fruitScore;
+
+        fruit.remove();
+    };
+
+
+    arena.appendChild(fruit);
+
+
+    /*
+        Owoc znika po 1.2 sekundy.
+    */
+
+    setTimeout(() => {
+
+        if (
+            fruit.parentElement &&
+            fruitRunning
+        ) {
+
+            fruit.remove();
+
+            fruitMisses++;
+
+            document.getElementById(
+                "fruitMisses"
+            ).textContent =
+                fruitMisses;
+
+
+            if (fruitMisses >= 3) {
+
+                fruitGameOver();
+            }
+        }
+
+    }, 1200);
+}
+
+
+function fruitGameOver() {
+
+    fruitRunning = false;
+
+    clearInterval(fruitTimer);
+
+    document.getElementById(
+        "fruitStatus"
+    ).textContent =
+        "💀 GAME OVER — Score: " +
+        fruitScore;
+
+}
+
+</script>
+
+
+
+<!-- ===================================== -->
+<!-- COLOR CHAOS -->
+<!-- ===================================== -->
+
+<div class="color-chaos">
+
+    <h2>🌈 COLOR CHAOS</h2>
+
+    <div class="chaos-score">
+        Score: <span id="chaosScore">0</span>
+    </div>
+
+    <div id="chaosQuestion">
+        Press START
+    </div>
+
+    <div id="chaosButtons">
+
+        <button onclick="chaosAnswer('RED')">
+            🔴 RED
+        </button>
+
+        <button onclick="chaosAnswer('BLUE')">
+            🔵 BLUE
+        </button>
+
+        <button onclick="chaosAnswer('GREEN')">
+            🟢 GREEN
+        </button>
+
+        <button onclick="chaosAnswer('YELLOW')">
+            🟡 YELLOW
+        </button>
+
+    </div>
+
+    <button
+        class="chaos-start"
+        onclick="chaosStart()">
+
+        ▶️ START
+
+    </button>
+
+    <div id="chaosStatus"></div>
+
+</div>
+
+
+<style>
+
+.color-chaos {
+
+    width: 94%;
+    max-width: 500px;
+
+    margin: 40px auto;
+    padding: 20px;
+
+    background: #151515;
+    color: white;
+
+    border: 2px solid #333;
+    border-radius: 20px;
+
+    text-align: center;
+}
+
+.chaos-score {
+    margin-bottom: 15px;
+}
+
+#chaosQuestion {
+
+    min-height: 90px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 42px;
+    font-weight: 900;
+
+    user-select: none;
+}
+
+#chaosButtons {
+
+    display: grid;
+
+    grid-template-columns: 1fr 1fr;
+
+    gap: 8px;
+
+    margin-top: 15px;
+}
+
+#chaosButtons button,
+.chaos-start {
+
+    border: none;
+    border-radius: 10px;
+
+    padding: 12px;
+
+    background: #333;
+    color: white;
+
+    font-weight: bold;
+
+    cursor: pointer;
+}
+
+#chaosButtons button {
+    font-size: 15px;
+}
+
+.chaos-start {
+    margin-top: 12px;
+    padding: 12px 25px;
+}
+
+#chaosStatus {
+
+    min-height: 25px;
+
+    margin-top: 12px;
+
+    font-weight: bold;
+}
+
+</style>
+
+
+<script>
+
+let chaosRunning = false;
+let chaosScore = 0;
+
+let chaosCorrectColor = "";
+
+
+/*
+    KOLORY
+*/
+
+const chaosColors = {
+
+    RED: "red",
+
+    BLUE: "blue",
+
+    GREEN: "limegreen",
+
+    YELLOW: "gold"
+
+};
+
+
+/*
+    START
+*/
+
+function chaosStart() {
+
+    chaosRunning = true;
+
+    chaosScore = 0;
+
+    document.getElementById(
+        "chaosScore"
+    ).textContent = "0";
+
+    document.getElementById(
+        "chaosStatus"
+    ).textContent = "";
+
+    chaosNext();
+}
+
+
+/*
+    NOWA RUNDA
+*/
+
+function chaosNext() {
+
+    if (!chaosRunning)
+        return;
+
+
+    const names = [
+        "RED",
+        "BLUE",
+        "GREEN",
+        "YELLOW"
+    ];
+
+
+    /*
+        Tekst
+    */
+
+    const text =
+        names[
+            Math.floor(
+                Math.random() *
+                names.length
+            )
+        ];
+
+
+    /*
+        Kolor czcionki
+    */
+
+    chaosCorrectColor =
+        names[
+            Math.floor(
+                Math.random() *
+                names.length
+            )
+        ];
+
+
+    const question =
+        document.getElementById(
+            "chaosQuestion"
+        );
+
+
+    question.textContent = text;
+
+    question.style.color =
+        chaosColors[
+            chaosCorrectColor
+        ];
+}
+
+
+/*
+    ODPOWIEDŹ
+*/
+
+function chaosAnswer(answer) {
+
+    if (!chaosRunning)
+        return;
+
+
+    if (
+        answer === chaosCorrectColor
+    ) {
+
+        chaosScore++;
+
+        document.getElementById(
+            "chaosScore"
+        ).textContent =
+            chaosScore;
+
+
+        chaosNext();
+
+    } else {
+
+        chaosRunning = false;
+
+        document.getElementById(
+            "chaosQuestion"
+        ).textContent =
+            "💀 GAME OVER";
+
+        document.getElementById(
+            "chaosStatus"
+        ).textContent =
+            "Final score: " +
+            chaosScore;
+    }
+}
+
+</script>
