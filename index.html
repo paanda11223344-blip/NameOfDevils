@@ -890,3 +890,484 @@ snakeStart();
 setInterval(snakeMove, 120);
 
 </script>
+<!-- SAPER -->
+<div class="minesweeper-game">
+
+    <h2>💣 SAPER</h2>
+
+    <div class="saper-menu">
+        <button onclick="startSaper('easy')">🟢 EASY</button>
+        <button onclick="startSaper('hard')">🔴 HARD</button>
+    </div>
+
+    <div id="saperInfo">
+        Wybierz poziom
+    </div>
+
+    <div id="saperBoard"></div>
+
+    <div id="saperMessage"></div>
+
+</div>
+
+<style>
+
+.minesweeper-game {
+    margin: 40px auto;
+    padding: 20px;
+    max-width: 500px;
+    text-align: center;
+    background: #151515;
+    border: 2px solid #333;
+    border-radius: 20px;
+}
+
+.minesweeper-game h2 {
+    margin-top: 0;
+}
+
+.saper-menu {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.saper-menu button {
+    padding: 10px 18px;
+    border: none;
+    border-radius: 10px;
+    background: #333;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.saper-menu button:hover {
+    background: #444;
+}
+
+#saperInfo {
+    margin-bottom: 12px;
+    color: #ccc;
+}
+
+#saperBoard {
+    display: grid;
+    gap: 2px;
+    justify-content: center;
+    margin: auto;
+    max-width: 100%;
+    overflow: hidden;
+}
+
+.saper-cell {
+    width: 34px;
+    height: 34px;
+
+    padding: 0;
+
+    border: 2px solid #555;
+    border-radius: 5px;
+
+    background: #292929;
+    color: white;
+
+    font-size: 16px;
+    font-weight: bold;
+
+    cursor: pointer;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.saper-cell:hover {
+    background: #3a3a3a;
+}
+
+.saper-cell.revealed {
+    background: #111;
+    border-color: #333;
+    cursor: default;
+}
+
+.saper-cell.mine {
+    background: #5a1111;
+}
+
+.saper-cell.flag {
+    background: #333;
+}
+
+#saperMessage {
+    min-height: 30px;
+    margin-top: 15px;
+    font-weight: bold;
+}
+
+@media (max-width: 450px) {
+
+    .saper-cell {
+        width: 28px;
+        height: 28px;
+        font-size: 13px;
+    }
+
+}
+
+</style>
+
+
+<script>
+
+let saperRows;
+let saperCols;
+let saperMines;
+
+let saperBoard = [];
+let saperGameOver = false;
+let saperRevealed = 0;
+
+
+// START GRY
+
+function startSaper(level) {
+
+    saperGameOver = false;
+    saperRevealed = 0;
+
+    if (level === "easy") {
+
+        // EASY
+        saperRows = 9;
+        saperCols = 9;
+        saperMines = 10;
+
+    } else {
+
+        // HARD
+        saperRows = 16;
+        saperCols = 16;
+        saperMines = 40;
+
+    }
+
+    document.getElementById("saperInfo").textContent =
+        level === "easy"
+        ? "🟢 EASY — 9×9 | 💣 10 min"
+        : "🔴 HARD — 16×16 | 💣 40 min";
+
+    document.getElementById("saperMessage").textContent = "";
+
+    createSaperBoard();
+}
+
+
+// TWORZENIE PLANSZY
+
+function createSaperBoard() {
+
+    saperBoard = [];
+
+    const boardElement =
+        document.getElementById("saperBoard");
+
+    boardElement.innerHTML = "";
+
+    boardElement.style.gridTemplateColumns =
+        `repeat(${saperCols}, 1fr)`;
+
+
+    // PUSTE POLA
+
+    for (let y = 0; y < saperRows; y++) {
+
+        saperBoard[y] = [];
+
+        for (let x = 0; x < saperCols; x++) {
+
+            saperBoard[y][x] = {
+                mine: false,
+                revealed: false,
+                flagged: false,
+                number: 0
+            };
+        }
+    }
+
+
+    // LOSOWANIE MIN
+
+    let minesPlaced = 0;
+
+    while (minesPlaced < saperMines) {
+
+        const x =
+            Math.floor(Math.random() * saperCols);
+
+        const y =
+            Math.floor(Math.random() * saperRows);
+
+        if (!saperBoard[y][x].mine) {
+
+            saperBoard[y][x].mine = true;
+
+            minesPlaced++;
+        }
+    }
+
+
+    // LICZENIE MIN OBOK
+
+    for (let y = 0; y < saperRows; y++) {
+
+        for (let x = 0; x < saperCols; x++) {
+
+            if (saperBoard[y][x].mine) continue;
+
+            let count = 0;
+
+            for (let dy = -1; dy <= 1; dy++) {
+
+                for (let dx = -1; dx <= 1; dx++) {
+
+                    if (dx === 0 && dy === 0)
+                        continue;
+
+                    const nx = x + dx;
+                    const ny = y + dy;
+
+                    if (
+                        nx >= 0 &&
+                        nx < saperCols &&
+                        ny >= 0 &&
+                        ny < saperRows &&
+                        saperBoard[ny][nx].mine
+                    ) {
+                        count++;
+                    }
+                }
+            }
+
+            saperBoard[y][x].number = count;
+        }
+    }
+
+
+    drawSaperBoard();
+}
+
+
+// RYSOWANIE
+
+function drawSaperBoard() {
+
+    const boardElement =
+        document.getElementById("saperBoard");
+
+    boardElement.innerHTML = "";
+
+    for (let y = 0; y < saperRows; y++) {
+
+        for (let x = 0; x < saperCols; x++) {
+
+            const cell = saperBoard[y][x];
+
+            const button =
+                document.createElement("button");
+
+            button.className = "saper-cell";
+
+            if (cell.revealed) {
+
+                button.classList.add("revealed");
+
+                if (cell.mine) {
+
+                    button.textContent = "💣";
+                    button.classList.add("mine");
+
+                } else if (cell.number > 0) {
+
+                    button.textContent = cell.number;
+
+                }
+
+            } else if (cell.flagged) {
+
+                button.textContent = "🚩";
+                button.classList.add("flag");
+
+            } else {
+
+                button.textContent = "";
+            }
+
+
+            button.onclick = () => {
+
+                revealSaperCell(x, y);
+
+            };
+
+
+            // PRAWY KLIK = FLAGA
+
+            button.oncontextmenu = (event) => {
+
+                event.preventDefault();
+
+                flagSaperCell(x, y);
+
+            };
+
+
+            boardElement.appendChild(button);
+        }
+    }
+}
+
+
+// ODKRYWANIE
+
+function revealSaperCell(x, y) {
+
+    if (saperGameOver)
+        return;
+
+    const cell = saperBoard[y][x];
+
+    if (cell.revealed || cell.flagged)
+        return;
+
+
+    // MINA 💣
+
+    if (cell.mine) {
+
+        cell.revealed = true;
+
+        saperGameOver = true;
+
+        revealAllSaperMines();
+
+        document.getElementById("saperMessage").textContent =
+            "💥 BOOM! Przegrałeś 😾";
+
+        drawSaperBoard();
+
+        return;
+    }
+
+
+    cell.revealed = true;
+    saperRevealed++;
+
+
+    // PUSTE POLE = ODKRYJ OKOLICĘ
+
+    if (cell.number === 0) {
+
+        for (let dy = -1; dy <= 1; dy++) {
+
+            for (let dx = -1; dx <= 1; dx++) {
+
+                if (dx === 0 && dy === 0)
+                    continue;
+
+                const nx = x + dx;
+                const ny = y + dy;
+
+                if (
+                    nx >= 0 &&
+                    nx < saperCols &&
+                    ny >= 0 &&
+                    ny < saperRows
+                ) {
+
+                    revealSaperCell(nx, ny);
+                }
+            }
+        }
+    }
+
+
+    drawSaperBoard();
+
+    checkSaperWin();
+}
+
+
+// FLAGA 🚩
+
+function flagSaperCell(x, y) {
+
+    if (saperGameOver)
+        return;
+
+    const cell = saperBoard[y][x];
+
+    if (cell.revealed)
+        return;
+
+    cell.flagged = !cell.flagged;
+
+    drawSaperBoard();
+}
+
+
+// ODKRYJ WSZYSTKIE MINY
+
+function revealAllSaperMines() {
+
+    for (let y = 0; y < saperRows; y++) {
+
+        for (let x = 0; x < saperCols; x++) {
+
+            if (saperBoard[y][x].mine) {
+
+                saperBoard[y][x].revealed = true;
+            }
+        }
+    }
+}
+
+
+// SPRAWDZANIE WYGRANEJ
+
+function checkSaperWin() {
+
+    let safeCells = 0;
+
+    for (let y = 0; y < saperRows; y++) {
+
+        for (let x = 0; x < saperCols; x++) {
+
+            if (
+                !saperBoard[y][x].mine &&
+                saperBoard[y][x].revealed
+            ) {
+                safeCells++;
+            }
+        }
+    }
+
+
+    const totalSafe =
+        saperRows * saperCols - saperMines;
+
+
+    if (safeCells === totalSafe) {
+
+        saperGameOver = true;
+
+        document.getElementById("saperMessage").textContent =
+            "🏆 WYGRAŁEŚ! Wszystkie bezpieczne pola odkryte! 🤑";
+
+        drawSaperBoard();
+    }
+}
+
+    </script>
