@@ -2177,3 +2177,566 @@ function bStatusText(text) {
 bRestart();
 
 </script>
+<!-- KÓŁKO I KRZYŻYK -->
+
+<div class="ttt-game">
+
+    <h2>🔴 KÓŁKO I KRZYŻYK 🔵</h2>
+
+    <div id="tttStatus">
+        Twój ruch 🔴
+    </div>
+
+    <div id="tttBoard">
+
+        <button onclick="tttMove(0)"></button>
+        <button onclick="tttMove(1)"></button>
+        <button onclick="tttMove(2)"></button>
+
+        <button onclick="tttMove(3)"></button>
+        <button onclick="tttMove(4)"></button>
+        <button onclick="tttMove(5)"></button>
+
+        <button onclick="tttMove(6)"></button>
+        <button onclick="tttMove(7)"></button>
+        <button onclick="tttMove(8)"></button>
+
+    </div>
+
+    <button class="ttt-restart" onclick="tttRestart()">
+        🔄 NOWA GRA
+    </button>
+
+</div>
+
+
+<style>
+
+.ttt-game {
+    width: 92%;
+    max-width: 430px;
+
+    margin: 40px auto;
+    padding: 20px;
+
+    text-align: center;
+
+    background: #151515;
+    border: 2px solid #333;
+    border-radius: 20px;
+
+    color: white;
+}
+
+.ttt-game h2 {
+    margin-top: 0;
+}
+
+#tttStatus {
+    min-height: 25px;
+    margin: 12px 0 18px;
+
+    font-weight: bold;
+}
+
+#tttBoard {
+
+    width: min(90vw, 360px);
+    aspect-ratio: 1;
+
+    margin: auto;
+
+    display: grid;
+
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+
+    gap: 6px;
+}
+
+#tttBoard button {
+
+    border: 2px solid #444;
+    border-radius: 12px;
+
+    background: #242424;
+
+    color: white;
+
+    font-size: clamp(40px, 12vw, 65px);
+    font-weight: bold;
+
+    cursor: pointer;
+
+    transition: .15s;
+}
+
+#tttBoard button:hover {
+    background: #333;
+}
+
+#tttBoard button:active {
+    transform: scale(.95);
+}
+
+.ttt-restart {
+
+    margin-top: 18px;
+
+    padding: 11px 22px;
+
+    border: none;
+    border-radius: 10px;
+
+    background: #333;
+    color: white;
+
+    font-size: 16px;
+    font-weight: bold;
+
+    cursor: pointer;
+}
+
+.ttt-restart:hover {
+    background: #444;
+}
+
+</style>
+
+
+<script>
+
+let tttBoard = [
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    ""
+];
+
+let tttPlayerTurn = true;
+let tttGameOver = false;
+
+
+/*
+    MOŻLIWE WYGRANE
+*/
+
+const tttWinPatterns = [
+
+    [0, 1, 2],
+    [3, 4, 5],
+    [6, 7, 8],
+
+    [0, 3, 6],
+    [1, 4, 7],
+    [2, 5, 8],
+
+    [0, 4, 8],
+    [2, 4, 6]
+
+];
+
+
+/*
+    RUCH GRACZA 🔴
+*/
+
+function tttMove(index) {
+
+    if (tttGameOver)
+        return;
+
+    if (!tttPlayerTurn)
+        return;
+
+    if (tttBoard[index] !== "")
+        return;
+
+
+    tttBoard[index] = "🔴";
+
+    tttDraw();
+
+
+    /*
+        SPRAWDŹ CZY GRACZ WYGRAŁ
+    */
+
+    if (tttHasWon("🔴")) {
+
+        tttFinish(
+            "🏆 WYGRAŁEŚ! 😎"
+        );
+
+        return;
+    }
+
+
+    /*
+        REMIS
+    */
+
+    if (!tttBoard.includes("")) {
+
+        tttFinish(
+            "😾 REMIS!"
+        );
+
+        return;
+    }
+
+
+    /*
+        TERAZ BOT
+    */
+
+    tttPlayerTurn = false;
+
+    document.getElementById("tttStatus")
+        .textContent =
+        "Bot myśli... 🔵";
+
+
+    setTimeout(
+        tttBotMove,
+        450
+    );
+}
+
+
+/*
+    RUCH BOTA 🔵
+*/
+
+function tttBotMove() {
+
+    if (tttGameOver)
+        return;
+
+
+    /*
+        BOT SZUKA NAJLEPSZEGO RUCHU
+    */
+
+    const move = tttFindBestMove();
+
+
+    if (move !== -1) {
+
+        tttBoard[move] = "🔵";
+    }
+
+
+    tttDraw();
+
+
+    /*
+        BOT WYGRAŁ
+    */
+
+    if (tttHasWon("🔵")) {
+
+        tttFinish(
+            "🔵 BOT WYGRAŁ!"
+        );
+
+        return;
+    }
+
+
+    /*
+        REMIS
+    */
+
+    if (!tttBoard.includes("")) {
+
+        tttFinish(
+            "😾 REMIS!"
+        );
+
+        return;
+    }
+
+
+    /*
+        ZNOWU GRACZ
+    */
+
+    tttPlayerTurn = true;
+
+    document.getElementById("tttStatus")
+        .textContent =
+        "Twój ruch 🔴";
+}
+
+
+/*
+    NAJLEPSZY RUCH BOTA
+*/
+
+function tttFindBestMove() {
+
+    let bestScore = -Infinity;
+    let bestMove = -1;
+
+
+    for (let i = 0; i < 9; i++) {
+
+        if (tttBoard[i] !== "")
+            continue;
+
+
+        /*
+            SPRÓBUJ RUCH
+        */
+
+        tttBoard[i] = "🔵";
+
+
+        let score = tttMinimax(
+            tttBoard,
+            0,
+            false
+        );
+
+
+        tttBoard[i] = "";
+
+
+        if (score > bestScore) {
+
+            bestScore = score;
+            bestMove = i;
+        }
+    }
+
+
+    return bestMove;
+}
+
+
+/*
+    MINIMAX
+
+    Dzięki temu bot:
+    - próbuje wygrać
+    - blokuje gracza
+    - nie wykonuje głupich ruchów
+*/
+
+function tttMinimax(
+    board,
+    depth,
+    isMaximizing
+) {
+
+
+    if (
+        tttCheckBoardWin(
+            board,
+            "🔵"
+        )
+    ) {
+        return 10 - depth;
+    }
+
+
+    if (
+        tttCheckBoardWin(
+            board,
+            "🔴"
+        )
+    ) {
+        return depth - 10;
+    }
+
+
+    if (!board.includes("")) {
+        return 0;
+    }
+
+
+    /*
+        BOT
+    */
+
+    if (isMaximizing) {
+
+        let bestScore = -Infinity;
+
+
+        for (let i = 0; i < 9; i++) {
+
+            if (board[i] !== "")
+                continue;
+
+
+            board[i] = "🔵";
+
+
+            const score =
+                tttMinimax(
+                    board,
+                    depth + 1,
+                    false
+                );
+
+
+            board[i] = "";
+
+
+            bestScore =
+                Math.max(
+                    bestScore,
+                    score
+                );
+        }
+
+
+        return bestScore;
+
+    }
+
+
+    /*
+        GRACZ
+    */
+
+    else {
+
+        let bestScore = Infinity;
+
+
+        for (let i = 0; i < 9; i++) {
+
+            if (board[i] !== "")
+                continue;
+
+
+            board[i] = "🔴";
+
+
+            const score =
+                tttMinimax(
+                    board,
+                    depth + 1,
+                    true
+                );
+
+
+            board[i] = "";
+
+
+            bestScore =
+                Math.min(
+                    bestScore,
+                    score
+                );
+        }
+
+
+        return bestScore;
+    }
+}
+
+
+/*
+    SPRAWDZANIE WYGRANEJ
+*/
+
+function tttHasWon(symbol) {
+
+    return tttCheckBoardWin(
+        tttBoard,
+        symbol
+    );
+}
+
+
+function tttCheckBoardWin(
+    board,
+    symbol
+) {
+
+    return tttWinPatterns.some(
+        pattern =>
+            pattern.every(
+                index =>
+                    board[index] === symbol
+            )
+    );
+}
+
+
+/*
+    RYSOWANIE
+*/
+
+function tttDraw() {
+
+    for (let i = 0; i < 9; i++) {
+
+        document
+            .querySelectorAll(
+                "#tttBoard button"
+            )[i]
+            .textContent =
+            tttBoard[i];
+    }
+}
+
+
+/*
+    KONIEC GRY
+*/
+
+function tttFinish(text) {
+
+    tttGameOver = true;
+
+    document.getElementById("tttStatus")
+        .textContent = text;
+}
+
+
+/*
+    RESTART
+*/
+
+function tttRestart() {
+
+    tttBoard = [
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        ""
+    ];
+
+    tttPlayerTurn = true;
+    tttGameOver = false;
+
+
+    document.getElementById("tttStatus")
+        .textContent =
+        "Twój ruch 🔴";
+
+
+    tttDraw();
+}
+
+
+/*
+    START
+*/
+
+tttDraw();
+
+</script>
