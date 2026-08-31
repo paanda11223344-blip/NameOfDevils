@@ -3846,3 +3846,402 @@ document.addEventListener(
 start2048();
 
                     </script>
+<!-- ============================= -->
+<!-- COIN FLIP -->
+<!-- ============================= -->
+
+<div class="coin-game">
+
+    <h2>🪙 COIN FLIP</h2>
+
+    <p>Choose your side:</p>
+
+    <div class="coin-choice">
+        <button onclick="chooseCoin('🪙')">🪙</button>
+        <button onclick="chooseCoin('🟡')">🟡</button>
+    </div>
+
+    <div id="coinResult">
+        Choose a side!
+    </div>
+
+    <div id="coinStatus"></div>
+
+</div>
+
+
+<style>
+
+.coin-game {
+    width: 94%;
+    max-width: 430px;
+    margin: 40px auto;
+    padding: 20px;
+
+    background: #151515;
+    color: white;
+
+    border: 2px solid #333;
+    border-radius: 20px;
+
+    text-align: center;
+}
+
+.coin-choice {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
+
+.coin-choice button {
+    width: 90px;
+    height: 70px;
+
+    border: 2px solid #444;
+    border-radius: 15px;
+
+    background: #292929;
+
+    font-size: 38px;
+
+    cursor: pointer;
+}
+
+.coin-choice button:hover {
+    background: #3a3a3a;
+}
+
+#coinResult {
+    margin-top: 20px;
+
+    min-height: 55px;
+
+    font-size: 40px;
+}
+
+#coinStatus {
+    min-height: 25px;
+    margin-top: 10px;
+    font-weight: bold;
+}
+
+</style>
+
+
+<script>
+
+let selectedCoin = null;
+
+function chooseCoin(choice) {
+
+    selectedCoin = choice;
+
+    document.getElementById("coinStatus")
+        .textContent =
+        "Flipping...";
+
+    document.getElementById("coinResult")
+        .textContent = "🌀";
+
+
+    setTimeout(() => {
+
+        /*
+            50/50
+        */
+
+        const result =
+            Math.random() < 0.5
+                ? "🪙"
+                : "🟡";
+
+
+        document.getElementById("coinResult")
+            .textContent = result;
+
+
+        if (result === selectedCoin) {
+
+            document.getElementById("coinStatus")
+                .textContent =
+                "❤️ YOU WON!";
+
+        } else {
+
+            document.getElementById("coinStatus")
+                .textContent =
+                "💀 YOU LOST!";
+
+        }
+
+    }, 700);
+}
+
+</script>
+
+
+
+<!-- ============================= -->
+<!-- REACTION TEST -->
+<!-- ============================= -->
+
+<div class="reaction-game">
+
+    <h2>⚡ REACTION TEST</h2>
+
+    <div id="reactionBox">
+        Press START
+    </div>
+
+    <div id="reactionResult">
+        Your best time: -
+    </div>
+
+    <button
+        class="reaction-start"
+        onclick="reactionStart()">
+        ▶️ START
+    </button>
+
+</div>
+
+
+<style>
+
+.reaction-game {
+    width: 94%;
+    max-width: 430px;
+
+    margin: 40px auto;
+    padding: 20px;
+
+    background: #151515;
+    color: white;
+
+    border: 2px solid #333;
+    border-radius: 20px;
+
+    text-align: center;
+}
+
+#reactionBox {
+
+    width: 100%;
+    height: 220px;
+
+    margin: 15px auto;
+
+    border-radius: 15px;
+
+    background: #292929;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 25px;
+    font-weight: bold;
+
+    cursor: pointer;
+
+    user-select: none;
+}
+
+.reaction-start {
+
+    border: none;
+    border-radius: 10px;
+
+    padding: 12px 25px;
+
+    background: #333;
+    color: white;
+
+    font-size: 17px;
+    font-weight: bold;
+
+    cursor: pointer;
+}
+
+#reactionResult {
+    min-height: 25px;
+    margin: 10px;
+    font-weight: bold;
+}
+
+</style>
+
+
+<script>
+
+let reactionWaiting = false;
+let reactionReady = false;
+
+let reactionStartTime = 0;
+let reactionBest = null;
+
+let reactionTimer = null;
+
+
+/*
+    START
+*/
+
+function reactionStart() {
+
+    if (reactionWaiting)
+        return;
+
+
+    const box =
+        document.getElementById(
+            "reactionBox"
+        );
+
+
+    reactionWaiting = true;
+    reactionReady = false;
+
+
+    box.textContent =
+        "WAIT...";
+
+    box.style.background =
+        "#292929";
+
+
+    /*
+        Losowy czas oczekiwania
+        1 - 5 sekund
+    */
+
+    const delay =
+        1000 +
+        Math.random() * 4000;
+
+
+    reactionTimer =
+        setTimeout(() => {
+
+            reactionReady = true;
+
+            reactionStartTime =
+                performance.now();
+
+
+            box.textContent =
+                "CLICK NOW! ⚡";
+
+            box.style.background =
+                "#245c2d";
+
+        }, delay);
+}
+
+
+/*
+    KLIKNIĘCIE
+*/
+
+document.getElementById(
+    "reactionBox"
+).addEventListener(
+    "click",
+    reactionClick
+);
+
+
+function reactionClick() {
+
+    const box =
+        document.getElementById(
+            "reactionBox"
+        );
+
+
+    /*
+        KLIK ZA WCZEŚNIE
+    */
+
+    if (
+        reactionWaiting &&
+        !reactionReady
+    ) {
+
+        clearTimeout(reactionTimer);
+
+        reactionWaiting = false;
+
+        box.textContent =
+            "TOO EARLY! 😾";
+
+        box.style.background =
+            "#6b2020";
+
+        document.getElementById(
+            "reactionResult"
+        ).textContent =
+            "You clicked too early!";
+
+
+        return;
+    }
+
+
+    /*
+        POPRAWNY KLIK
+    */
+
+    if (reactionReady) {
+
+        const time =
+            Math.round(
+                performance.now() -
+                reactionStartTime
+            );
+
+
+        reactionWaiting = false;
+        reactionReady = false;
+
+
+        box.textContent =
+            time + " ms ⚡";
+
+        box.style.background =
+            "#293f63";
+
+
+        /*
+            BEST SCORE
+        */
+
+        if (
+            reactionBest === null ||
+            time < reactionBest
+        ) {
+
+            reactionBest = time;
+
+            document.getElementById(
+                "reactionResult"
+            ).textContent =
+                "🏆 NEW BEST: " +
+                time +
+                " ms";
+
+        } else {
+
+            document.getElementById(
+                "reactionResult"
+            ).textContent =
+                "Your time: " +
+                time +
+                " ms | Best: " +
+                reactionBest +
+                " ms";
+        }
+    }
+}
+
+</script>
