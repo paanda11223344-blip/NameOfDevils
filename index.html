@@ -5888,3 +5888,689 @@ function flappyGameOver() {
 }
 
             </script>
+<!-- ===================================== -->
+<!-- FISH ESCAPE: SHARK MODE -->
+<!-- ===================================== -->
+
+<div class="fish-game">
+
+    <h2>🦈 FISH ESCAPE</h2>
+
+    <div class="fish-score">
+        Score: <span id="fishScore">0</span>
+        &nbsp; | &nbsp;
+        Best: <span id="fishBest">0</span>
+    </div>
+
+    <div id="fishArena">
+
+        <div id="fishPlayer">🐟</div>
+        <div id="fishShark">🦈</div>
+
+        <div id="fishMessage">
+            PRESS START
+        </div>
+
+    </div>
+
+    <div class="fish-controls">
+
+        <button onclick="fishMove('up')">⬆️</button>
+
+        <div>
+            <button onclick="fishMove('left')">⬅️</button>
+            <button onclick="fishMove('down')">⬇️</button>
+            <button onclick="fishMove('right')">➡️</button>
+        </div>
+
+    </div>
+
+    <button
+        class="fish-start"
+        onclick="fishStart()">
+
+        ▶️ START
+
+    </button>
+
+    <p>
+        Use the buttons or arrow keys to escape! 🐟
+    </p>
+
+</div>
+
+
+<style>
+
+.fish-game {
+
+    width: 94%;
+    max-width: 500px;
+
+    margin: 40px auto;
+    padding: 20px;
+
+    background: #151515;
+    color: white;
+
+    border: 2px solid #333;
+    border-radius: 20px;
+
+    text-align: center;
+
+    user-select: none;
+}
+
+.fish-game h2 {
+    margin-top: 0;
+}
+
+.fish-score {
+
+    margin-bottom: 12px;
+
+    font-size: 18px;
+    font-weight: bold;
+}
+
+#fishArena {
+
+    position: relative;
+
+    width: min(90vw, 400px);
+    height: 500px;
+
+    margin: auto;
+
+    overflow: hidden;
+
+    border: 3px solid #444;
+    border-radius: 15px;
+
+    background:
+        linear-gradient(
+            #0879a8,
+            #064b73
+        );
+
+    cursor: default;
+}
+
+
+/*
+    BĄBELKI
+*/
+
+#fishArena::before {
+
+    content: "🫧     🫧          🫧     🫧       🫧";
+
+    position: absolute;
+
+    top: 30px;
+    left: 0;
+
+    width: 100%;
+
+    font-size: 20px;
+
+    opacity: .5;
+
+    animation: bubbles 5s linear infinite;
+
+}
+
+@keyframes bubbles {
+
+    from {
+        transform: translateY(0);
+    }
+
+    to {
+        transform: translateY(400px);
+    }
+
+}
+
+
+/*
+    RYBKA
+*/
+
+#fishPlayer {
+
+    position: absolute;
+
+    width: 45px;
+    height: 45px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    font-size: 36px;
+
+    z-index: 5;
+
+    transition: left .08s,
+                top .08s;
+}
+
+
+/*
+    REKIN
+*/
+
+#fishShark {
+
+    position: absolute;
+
+    width: 65px;
+    height: 65px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    font-size: 55px;
+
+    z-index: 4;
+
+    transition: left .15s,
+                top .15s;
+}
+
+
+/*
+    NAPIS
+*/
+
+#fishMessage {
+
+    position: absolute;
+
+    top: 45%;
+
+    left: 0;
+    right: 0;
+
+    text-align: center;
+
+    font-size: 28px;
+    font-weight: 900;
+
+    text-shadow:
+        2px 2px 5px #000;
+
+    z-index: 10;
+
+    pointer-events: none;
+}
+
+
+/*
+    PRZYCISKI
+*/
+
+.fish-controls {
+
+    margin-top: 12px;
+}
+
+.fish-controls button,
+.fish-start {
+
+    border: none;
+    border-radius: 10px;
+
+    background: #333;
+    color: white;
+
+    cursor: pointer;
+
+    font-size: 20px;
+    font-weight: bold;
+
+    min-width: 55px;
+    min-height: 45px;
+
+    margin: 3px;
+}
+
+.fish-start {
+
+    margin-top: 10px;
+
+    padding: 12px 25px;
+
+    font-size: 17px;
+}
+
+.fish-controls button:active,
+.fish-start:active {
+
+    transform: scale(.92);
+
+}
+
+.fish-game p {
+
+    color: #aaa;
+
+    font-size: 13px;
+}
+
+</style>
+
+
+<script>
+
+let fishRunning = false;
+
+let fishPlayer = {
+    x: 50,
+    y: 250
+};
+
+let fishShark = {
+    x: 300,
+    y: 250
+};
+
+let fishScore = 0;
+
+let fishBest =
+    Number(
+        localStorage.getItem(
+            "fishEscapeBest"
+        )
+    ) || 0;
+
+let fishTimer = null;
+
+let fishDifficulty = 1;
+
+
+/*
+    BEST
+*/
+
+document.getElementById(
+    "fishBest"
+).textContent =
+    fishBest;
+
+
+/*
+    START
+*/
+
+function fishStart() {
+
+    fishRunning = true;
+
+    fishScore = 0;
+
+    fishDifficulty = 1;
+
+
+    fishPlayer = {
+        x: 50,
+        y: 250
+    };
+
+
+    fishShark = {
+        x: 300,
+        y: 250
+    };
+
+
+    document.getElementById(
+        "fishScore"
+    ).textContent =
+        "0";
+
+
+    document.getElementById(
+        "fishMessage"
+    ).textContent =
+        "";
+
+
+    fishUpdatePositions();
+
+
+    clearInterval(
+        fishTimer
+    );
+
+
+    /*
+        Rekin porusza się
+    */
+
+    fishTimer =
+        setInterval(
+            fishSharkMove,
+            160
+        );
+
+
+    /*
+        Wynik rośnie
+    */
+
+    setInterval(
+        fishScoreTick,
+        1000
+    );
+
+}
+
+
+/*
+    RUCH GRACZA
+*/
+
+function fishMove(direction) {
+
+    if (!fishRunning)
+        return;
+
+
+    const step = 35;
+
+
+    if (direction === "up")
+        fishPlayer.y -= step;
+
+
+    if (direction === "down")
+        fishPlayer.y += step;
+
+
+    if (direction === "left")
+        fishPlayer.x -= step;
+
+
+    if (direction === "right")
+        fishPlayer.x += step;
+
+
+    /*
+        GRANICE
+    */
+
+    fishPlayer.x =
+        Math.max(
+            5,
+            Math.min(
+                350,
+                fishPlayer.x
+            )
+        );
+
+
+    fishPlayer.y =
+        Math.max(
+            5,
+            Math.min(
+                450,
+                fishPlayer.y
+            )
+        );
+
+
+    fishUpdatePositions();
+
+    fishCheckCollision();
+}
+
+
+/*
+    RUCH REKINA
+*/
+
+function fishSharkMove() {
+
+    if (!fishRunning)
+        return;
+
+
+    const speed =
+        5 +
+        fishDifficulty;
+
+
+    /*
+        Rekin śledzi rybkę
+    */
+
+    if (
+        fishShark.x <
+        fishPlayer.x
+    ) {
+
+        fishShark.x += speed;
+
+    } else {
+
+        fishShark.x -= speed;
+
+    }
+
+
+    if (
+        fishShark.y <
+        fishPlayer.y
+    ) {
+
+        fishShark.y += speed;
+
+    } else {
+
+        fishShark.y -= speed;
+
+    }
+
+
+    fishUpdatePositions();
+
+    fishCheckCollision();
+}
+
+
+/*
+    AKTUALIZACJA POZYCJI
+*/
+
+function fishUpdatePositions() {
+
+    document.getElementById(
+        "fishPlayer"
+    ).style.left =
+        fishPlayer.x + "px";
+
+
+    document.getElementById(
+        "fishPlayer"
+    ).style.top =
+        fishPlayer.y + "px";
+
+
+    document.getElementById(
+        "fishShark"
+    ).style.left =
+        fishShark.x + "px";
+
+
+    document.getElementById(
+        "fishShark"
+    ).style.top =
+        fishShark.y + "px";
+
+}
+
+
+/*
+    KOLIZJA
+*/
+
+function fishCheckCollision() {
+
+    const dx =
+        fishPlayer.x -
+        fishShark.x;
+
+
+    const dy =
+        fishPlayer.y -
+        fishShark.y;
+
+
+    const distance =
+        Math.sqrt(
+            dx * dx +
+            dy * dy
+        );
+
+
+    if (distance < 55) {
+
+        fishGameOver();
+
+    }
+
+}
+
+
+/*
+    PUNKTY
+*/
+
+function fishScoreTick() {
+
+    if (!fishRunning)
+        return;
+
+
+    fishScore++;
+
+
+    document.getElementById(
+        "fishScore"
+    ).textContent =
+        fishScore;
+
+
+    /*
+        Co 5 sekund rekin
+        robi się szybszy
+    */
+
+    fishDifficulty =
+        1 +
+        Math.floor(
+            fishScore / 5
+        );
+
+}
+
+
+/*
+    GAME OVER
+*/
+
+function fishGameOver() {
+
+    if (!fishRunning)
+        return;
+
+
+    fishRunning = false;
+
+
+    clearInterval(
+        fishTimer
+    );
+
+
+    if (
+        fishScore >
+        fishBest
+    ) {
+
+        fishBest =
+            fishScore;
+
+
+        localStorage.setItem(
+            "fishEscapeBest",
+            fishBest
+        );
+
+
+        document.getElementById(
+            "fishBest"
+        ).textContent =
+            fishBest;
+    }
+
+
+    document.getElementById(
+        "fishMessage"
+    ).innerHTML =
+        "🦈 CAUGHT! 💀<br>" +
+        "<span style='font-size:18px'>" +
+        "Score: " +
+        fishScore +
+        "</span>";
+
+}
+
+
+/*
+    KLAWIATURA
+*/
+
+document.addEventListener(
+    "keydown",
+    function(event) {
+
+        if (
+            event.key === "ArrowUp"
+        )
+            fishMove("up");
+
+
+        if (
+            event.key === "ArrowDown"
+        )
+            fishMove("down");
+
+
+        if (
+            event.key === "ArrowLeft"
+        )
+            fishMove("left");
+
+
+        if (
+            event.key === "ArrowRight"
+        )
+            fishMove("right");
+
+    }
+);
+
+
+/*
+    USTAW POZYCJE NA START
+*/
+
+fishUpdatePositions();
+
+</script>
